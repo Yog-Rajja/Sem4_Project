@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './components/ui/Toast'
 import AppLayout from './components/layout/AppLayout'
@@ -43,11 +42,11 @@ function RedirectIfAuthed({ children }) {
 }
 
 function AppRoutes() {
-  const location = useLocation()
-
+  // No AnimatePresence here: pages animate in via PageShell and define no exit
+  // animation, and wrapping routes in `mode="wait"` stalls swaps whenever a
+  // page owns its own presence children.
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+    <Routes>
         <Route
           path="/login"
           element={
@@ -83,8 +82,7 @@ function AppRoutes() {
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AnimatePresence>
+    </Routes>
   )
 }
 
