@@ -8,6 +8,10 @@ to *plan* to *proof*.
 - [ ] `backend/.env` has a real `GEMINI_API_KEY` and `YOUTUBE_API_KEY`, and
       `USE_MOCK_AI=false`. **Check this** — the mock stub produces generic
       milestone titles that will undercut the whole demo.
+- [ ] Run `python backend/manage.py verify_ai` — one command that confirms the
+      keys work, the generated dates are sane, and the video links resolve. Do
+      this the morning of, not the night before: it catches an expired key or
+      an exhausted quota while you still have time to react.
 - [ ] Backend running: `python backend/manage.py runserver 127.0.0.1:8010`
 - [ ] Frontend running: `npm run dev` in `frontend/`
 - [ ] Register a demo account beforehand and create **one** finished-looking

@@ -104,6 +104,25 @@ npm run dev
 
 Open <http://localhost:5173>, register an account, and create your first goal.
 
+### Checking your keys actually work
+
+The test suite mocks Gemini and YouTube, so it proves the plumbing is right but
+says nothing about what the live model returns. Once your keys are in, run:
+
+```bash
+.venv\Scripts\python.exe backend/manage.py verify_ai
+```
+
+It generates real roadmaps for four different kinds of goal (exam prep, an
+open-ended career goal, a concrete skill, and a savings goal with nothing to
+"learn") and checks the output: milestone dates increase, nothing lands after
+your deadline or before today, every task falls within its milestone, search
+topics name subjects rather than actions, and no filler task titles. It then
+runs a real YouTube lookup and confirms each returned link resolves.
+
+Costs one Gemini request per goal and 100 YouTube quota units of the daily
+10,000. Worth running once after setup and again before you demo.
+
 ### Working without API keys
 
 Set `USE_MOCK_AI=true` in `backend/.env` and roadmap generation returns a
