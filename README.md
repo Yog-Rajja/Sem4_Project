@@ -113,6 +113,24 @@ search link, plus a note explaining that videos are unavailable.
 
 ---
 
+## Tests
+
+```bash
+.venv\Scripts\python.exe backend/manage.py test
+```
+
+123 tests covering auth and JWT issuing, roadmap schema validation, LLM JSON
+parsing and retry behaviour, resource discovery and its fallbacks, every API
+endpoint and filter, progress calculation, and per-user data isolation on every
+resource.
+
+The suite needs no running server, no API keys and no network — the Gemini and
+YouTube calls are mocked at the transport boundary, and uploads go to a
+throwaway media root. It runs against a temporary database, so your development
+data is untouched.
+
+---
+
 ## API
 
 All endpoints require `Authorization: Bearer <access>` except register/login.
