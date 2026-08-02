@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './components/ui/Toast'
@@ -11,14 +12,26 @@ import Goals from './pages/Goals'
 import GoalDetail from './pages/GoalDetail'
 import NewGoal from './pages/NewGoal'
 import Tasks from './pages/Tasks'
-import Analytics from './pages/Analytics'
 import Calendar from './pages/Calendar'
 import NotFound from './pages/NotFound'
+
+// Recharts is by far the heaviest dependency and only one screen needs it, so
+// Analytics loads on demand instead of weighing down first paint.
+const Analytics = lazy(() => import('./pages/Analytics'))
 
 function FullPageSpinner() {
   return (
     <div className="grid min-h-screen place-items-center bg-canvas text-brand-600">
       <Spinner size={26} />
+    </div>
+  )
+}
+
+/** Spinner sized for the content area, inside the authenticated shell. */
+function PageSpinner() {
+  return (
+    <div className="grid place-items-center py-24 text-brand-600">
+      <Spinner size={24} />
     </div>
   )
 }
@@ -76,7 +89,14 @@ function AppRoutes() {
           <Route path="/goals/new" element={<NewGoal />} />
           <Route path="/goals/:id" element={<GoalDetail />} />
           <Route path="/tasks" element={<Tasks />} />
-          <Route path="/analytics" element={<Analytics />} />
+          <Route
+            path="/analytics"
+            element={
+              <Suspense fallback={<PageSpinner />}>
+                <Analytics />
+              </Suspense>
+            }
+          />
           <Route path="/calendar" element={<Calendar />} />
         </Route>
 
