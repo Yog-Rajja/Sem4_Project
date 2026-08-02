@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import PageShell from '../components/layout/PageShell'
 import MilestoneCard from '../components/goals/MilestoneCard'
+import DocumentVault from '../components/vault/DocumentVault'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -449,6 +450,8 @@ export default function GoalDetail() {
           </AnimatePresence>
         </div>
       )}
+
+      <DocumentVault goalId={goal.id} />
 
       <ConfirmDialog
         open={Boolean(confirm)}
