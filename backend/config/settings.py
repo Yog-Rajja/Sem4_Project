@@ -16,7 +16,12 @@ def env_bool(name: str, default: bool = False) -> bool:
     return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
 
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-insecure-key-change-me")
+# The fallback is development-only and deliberately long enough to clear the
+# 32-byte HMAC minimum SimpleJWT warns about. Always set DJANGO_SECRET_KEY.
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "dev-only-insecure-key-change-me-before-you-deploy-anywhere-real",
+)
 DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",") if h.strip()]
 
@@ -156,3 +161,7 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 USE_MOCK_AI = env_bool("USE_MOCK_AI", False)
 
 LLM_TIMEOUT_SECONDS = int(os.getenv("LLM_TIMEOUT_SECONDS", "45"))
+
+# Keeps expected service-layer warnings out of the test output; the suite
+# asserts on behaviour, not log lines.
+TEST_RUNNER = "common.testing.QuietTestRunner"
