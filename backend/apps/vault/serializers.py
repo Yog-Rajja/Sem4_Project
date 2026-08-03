@@ -11,13 +11,23 @@ class DocumentSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
     goal_title = serializers.CharField(source="goal.title", read_only=True)
 
+    is_analysed = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = Document
         fields = [
             "id", "goal", "goal_title", "file", "file_url",
             "original_name", "size_bytes", "uploaded_at",
+            "summary", "doc_type", "key_points", "suggested_actions",
+            "is_analysed", "analysed_at",
         ]
-        read_only_fields = ["id", "original_name", "size_bytes", "uploaded_at"]
+        read_only_fields = [
+            "id", "original_name", "size_bytes", "uploaded_at",
+            "summary", "doc_type", "key_points", "suggested_actions",
+            "is_analysed", "analysed_at",
+        ]
+        # `extracted_text` is deliberately not exposed — it can be 60k
+        # characters and no screen needs it.
         extra_kwargs = {"file": {"write_only": True}}
 
     def get_file_url(self, obj):
