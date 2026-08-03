@@ -9,6 +9,7 @@ import {
   HomeIcon,
   TargetIcon,
   TimerIcon,
+  UsersIcon,
   WandIcon,
   XIcon,
 } from '../ui/Icons'
@@ -19,6 +20,7 @@ const NAV = [
   { to: '/tasks', label: 'Tasks', icon: CheckSquareIcon },
   { to: '/focus', label: 'Focus', icon: TimerIcon },
   { to: '/studio', label: 'Studio', icon: WandIcon },
+  { to: '/circles', label: 'Circles', icon: UsersIcon },
   { to: '/calendar', label: 'Calendar', icon: CalendarIcon },
   { to: '/analytics', label: 'Analytics', icon: ChartIcon },
 ]

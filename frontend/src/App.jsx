@@ -16,6 +16,8 @@ import Tasks from './pages/Tasks'
 import Focus from './pages/Focus'
 import Calendar from './pages/Calendar'
 import Settings from './pages/Settings'
+import Circles from './pages/Circles'
+import CircleDetail from './pages/CircleDetail'
 import NotFound from './pages/NotFound'
 
 // Recharts and the PDF engine are the two heaviest dependencies and each is
@@ -113,6 +115,8 @@ function AppRoutes() {
             }
           />
           <Route path="/calendar" element={<Calendar />} />
+          <Route path="/circles" element={<Circles />} />
+          <Route path="/circles/:id" element={<CircleDetail />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
 

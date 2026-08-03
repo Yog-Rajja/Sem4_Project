@@ -18,6 +18,7 @@ import {
   SunIcon,
   TargetIcon,
   TimerIcon,
+  UsersIcon,
   WandIcon,
 } from '../ui/Icons'
 
@@ -121,6 +122,7 @@ export default function CommandPalette({ open, onClose }) {
       { id: 'nav-tasks', label: 'Tasks', icon: CheckSquareIcon, to: '/tasks' },
       { id: 'nav-focus', label: 'Focus', icon: TimerIcon, to: '/focus' },
       { id: 'nav-studio', label: 'Studio', icon: WandIcon, to: '/studio' },
+      { id: 'nav-circles', label: 'Circles', icon: UsersIcon, to: '/circles' },
       { id: 'nav-calendar', label: 'Calendar', icon: CalendarIcon, to: '/calendar' },
       { id: 'nav-analytics', label: 'Analytics', icon: ChartIcon, to: '/analytics' },
     ].map((page) => ({
