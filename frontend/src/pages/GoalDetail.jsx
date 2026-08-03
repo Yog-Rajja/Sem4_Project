@@ -6,9 +6,11 @@ import MilestoneCard from '../components/goals/MilestoneCard'
 import DocumentVault from '../components/vault/DocumentVault'
 import ReplanDialog from '../components/goals/ReplanDialog'
 import ShareDialog from '../components/goals/ShareDialog'
+import CertificateBanner from '../components/goals/CertificateBanner'
+import SkillGraph from '../components/goals/SkillGraph'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
-import Card from '../components/ui/Card'
+import Card, { CardHeader } from '../components/ui/Card'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import EmptyState from '../components/ui/EmptyState'
 import ErrorState from '../components/ui/ErrorState'
@@ -41,6 +43,16 @@ export default function GoalDetail() {
   const [confirmBusy, setConfirmBusy] = useState(false)
   const [replanOpen, setReplanOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+
+  const scrollToMilestone = (milestoneId) => {
+    const el = document.getElementById(`milestone-${milestoneId}`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.animate(
+      [{ boxShadow: '0 0 0 3px var(--color-brand-400)' }, { boxShadow: '0 0 0 0 transparent' }],
+      { duration: 900, easing: 'ease-out' },
+    )
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -427,6 +439,10 @@ export default function GoalDetail() {
         </Card>
       </div>
 
+      {stats.progress === 100 && stats.total > 0 && (
+        <CertificateBanner goal={goal} />
+      )}
+
       {goal.milestones.length === 0 ? (
         <Card>
           <EmptyState
@@ -445,28 +461,41 @@ export default function GoalDetail() {
         <div className="space-y-3">
           <AnimatePresence initial={false}>
             {goal.milestones.map((milestone, index) => (
-              <MilestoneCard
-                key={milestone.id}
-                milestone={milestone}
-                index={index}
-                isFirst={index === 0}
-                isLast={index === goal.milestones.length - 1}
-                onRename={renameMilestone}
-                onDateChange={changeMilestoneDate}
-                onQueryChange={changeMilestoneQuery}
-                onToggleComplete={toggleMilestone}
-                onDelete={(m) => setConfirm({ kind: 'milestone', target: m })}
-                onMove={moveMilestone}
-                onAddTask={addTask}
-                taskHandlers={taskHandlers}
-                onFetchResources={fetchResources}
-                resourcesLoading={resourceState[milestone.id]?.loading}
-                resourcesWarning={resourceState[milestone.id]?.warning}
-                breakingDownTaskId={breakingDownTaskId}
-              />
+              <div key={milestone.id} id={`milestone-${milestone.id}`} className="rounded-card">
+                <MilestoneCard
+                  milestone={milestone}
+                  index={index}
+                  isFirst={index === 0}
+                  isLast={index === goal.milestones.length - 1}
+                  onRename={renameMilestone}
+                  onDateChange={changeMilestoneDate}
+                  onQueryChange={changeMilestoneQuery}
+                  onToggleComplete={toggleMilestone}
+                  onDelete={(m) => setConfirm({ kind: 'milestone', target: m })}
+                  onMove={moveMilestone}
+                  onAddTask={addTask}
+                  taskHandlers={taskHandlers}
+                  onFetchResources={fetchResources}
+                  resourcesLoading={resourceState[milestone.id]?.loading}
+                  resourcesWarning={resourceState[milestone.id]?.warning}
+                  breakingDownTaskId={breakingDownTaskId}
+                />
+              </div>
             ))}
           </AnimatePresence>
         </div>
+      )}
+
+      {goal.milestones.length > 0 && (
+        <Card className="mt-3">
+          <CardHeader
+            title="Skill map"
+            subtitle="How the topics in this roadmap depend on each other"
+          />
+          <div className="px-2 pb-3">
+            <SkillGraph goalId={goal.id} onSelectMilestone={scrollToMilestone} />
+          </div>
+        </Card>
       )}
 
       <DocumentVault goalId={goal.id} />
