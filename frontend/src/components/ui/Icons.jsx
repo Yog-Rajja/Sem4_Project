@@ -194,6 +194,66 @@ export const FileIcon = (p) => (
   </Svg>
 )
 
+export const SunIcon = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+  </Svg>
+)
+
+export const MoonIcon = (p) => (
+  <Svg {...p}>
+    <path d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" />
+  </Svg>
+)
+
+export const TimerIcon = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="13.5" r="7.5" />
+    <path d="M12 10v3.5l2 1.5M9.5 2.5h5" />
+  </Svg>
+)
+
+export const FlameIcon = (p) => (
+  <Svg {...p}>
+    <path d="M12 3s4.5 3.6 4.5 8a4.5 4.5 0 0 1-9 0c0-1.3.5-2.4 1-3 .2 1 .8 1.8 1.6 1.8 1.2 0 1.4-1.5 1.4-3 0-1.6.5-3 .5-3.8z" />
+    <path d="M7 13.5A5 5 0 0 0 12 21a5 5 0 0 0 5-5" />
+  </Svg>
+)
+
+export const BellIcon = (p) => (
+  <Svg {...p}>
+    <path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9z" />
+    <path d="M10.3 19a2 2 0 0 0 3.4 0" />
+  </Svg>
+)
+
+export const WandIcon = (p) => (
+  <Svg {...p}>
+    <path d="M4 20 15 9" />
+    <path d="M14.5 4.5 15.5 7l2.5 1-2.5 1-1 2.5-1-2.5L11 8l2.5-1z" />
+    <path d="M19 14.5l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" />
+  </Svg>
+)
+
+export const PauseIcon = (p) => (
+  <Svg {...p}>
+    <path d="M9.5 5.5v13M14.5 5.5v13" />
+  </Svg>
+)
+
+export const StopIcon = (p) => (
+  <Svg {...p}>
+    <rect x="6" y="6" width="12" height="12" rx="2.5" />
+  </Svg>
+)
+
+export const CommandIcon = (p) => (
+  <Svg {...p}>
+    <path d="M8.5 6.5a2 2 0 1 0-2 2h11a2 2 0 1 0-2-2v11a2 2 0 1 0 2-2h-11a2 2 0 1 0 2 2z" />
+  </Svg>
+)
+
 export const CompassIcon = (p) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="9" />

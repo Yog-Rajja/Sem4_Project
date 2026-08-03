@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { SERIES, SERIES_SOFT } from './chartTheme'
+import { useChartTheme } from './chartTheme'
 
 /**
  * Overall completion is one headline number, so it gets a hero figure and a
@@ -8,6 +8,7 @@ import { SERIES, SERIES_SOFT } from './chartTheme'
  * colour alone.
  */
 export default function CompletionMeter({ completed, pending, progress }) {
+  const theme = useChartTheme()
   const total = completed + pending
 
   return (
@@ -19,13 +20,13 @@ export default function CompletionMeter({ completed, pending, progress }) {
 
       <div
         className="mt-4 flex h-3 w-full overflow-hidden rounded-full"
-        style={{ backgroundColor: SERIES_SOFT }}
+        style={{ backgroundColor: theme.seriesSoft }}
         role="img"
         aria-label={`${completed} of ${total} tasks complete`}
       >
         <motion.div
           className="h-full rounded-full"
-          style={{ backgroundColor: SERIES }}
+          style={{ backgroundColor: theme.series }}
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ type: 'spring', stiffness: 150, damping: 24 }}
@@ -36,7 +37,7 @@ export default function CompletionMeter({ completed, pending, progress }) {
         <span className="flex items-center gap-1.5 text-ink-soft">
           <span
             className="h-2.5 w-2.5 rounded-[3px]"
-            style={{ backgroundColor: SERIES }}
+            style={{ backgroundColor: theme.series }}
             aria-hidden="true"
           />
           {completed} completed
@@ -44,7 +45,7 @@ export default function CompletionMeter({ completed, pending, progress }) {
         <span className="flex items-center gap-1.5 text-ink-soft">
           <span
             className="h-2.5 w-2.5 rounded-[3px]"
-            style={{ backgroundColor: SERIES_SOFT }}
+            style={{ backgroundColor: theme.seriesSoft }}
             aria-hidden="true"
           />
           {pending} remaining
