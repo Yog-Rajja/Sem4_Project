@@ -109,9 +109,22 @@ def _build_system_prompt(kind: str) -> str:
     )
 
 
-def _build_user_prompt(prompt: str, source_text: str | None) -> str:
+def _build_user_prompt(
+    prompt: str, source_text: str | None, user_context: dict | None = None
+) -> str:
     today = dt.date.today().strftime("%d %B %Y")
     parts = [f"Today's date: {today}", f"Request: {prompt}"]
+
+    # The account already holds these, so using them is not invention — and
+    # without it a CV comes out addressed to "Your Name".
+    if user_context:
+        known = [f"{key}: {value}" for key, value in user_context.items() if value]
+        if known:
+            parts.append(
+                "Known details about the user — use these verbatim where the "
+                "document calls for them:\n" + "\n".join(known)
+            )
+
     if source_text:
         parts.append(
             "Use the following material the user supplied as the source of "
@@ -246,7 +259,12 @@ def _mock_data(kind: str, prompt: str) -> dict:
     }
 
 
-def generate_artifact(prompt: str, kind: str | None = None, source_text: str | None = None):
+def generate_artifact(
+    prompt: str,
+    kind: str | None = None,
+    source_text: str | None = None,
+    user_context: dict | None = None,
+):
     """Returns (kind, validated_data, title)."""
     resolved = kind if kind in SCHEMAS else classify(prompt)
 
@@ -255,7 +273,7 @@ def generate_artifact(prompt: str, kind: str | None = None, source_text: str | N
     else:
         raw = llm.complete_json(
             system=_build_system_prompt(resolved),
-            user=_build_user_prompt(prompt, source_text),
+            user=_build_user_prompt(prompt, source_text, user_context),
             temperature=0.35,
         )
 

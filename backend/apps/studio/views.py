@@ -13,6 +13,12 @@ from .serializers import (
 )
 
 
+def _user_context(user) -> dict:
+    """Facts the account already holds, so a CV isn't addressed to "Your Name"."""
+    full_name = f"{user.first_name} {user.last_name}".strip()
+    return {"Full name": full_name or user.username, "Email": user.email}
+
+
 class ArtifactViewSet(viewsets.ModelViewSet):
     """Generated documents. One engine, many kinds."""
 
@@ -69,6 +75,7 @@ class ArtifactViewSet(viewsets.ModelViewSet):
             prompt=prompt,
             kind=serializer.validated_data.get("kind"),
             source_text=source_text,
+            user_context=_user_context(request.user),
         )
 
         artifact = Artifact.objects.create(
@@ -90,7 +97,9 @@ class ArtifactViewSet(viewsets.ModelViewSet):
         tweak = str(request.data.get("instruction") or "").strip()[:1000]
 
         prompt = f"{artifact.prompt}\n\nAdditional instruction: {tweak}" if tweak else artifact.prompt
-        _, data, title = generate_artifact(prompt=prompt, kind=artifact.kind)
+        _, data, title = generate_artifact(
+            prompt=prompt, kind=artifact.kind, user_context=_user_context(request.user)
+        )
 
         artifact.data = data
         artifact.title = title
