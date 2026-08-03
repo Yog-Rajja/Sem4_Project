@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from django.test import SimpleTestCase, override_settings
 
+from common.exceptions import ServiceError
 from common.testing import AuthenticatedAPITestCase, results
 
 from apps.goals.models import Goal
@@ -27,6 +28,41 @@ class ClassifyTests(SimpleTestCase):
                 with self.subTest(prompt=prompt):
                     self.assertEqual(classify(prompt), expected)
         mocked.assert_not_called()
+
+    def test_card_requests_are_not_mistaken_for_a_cv(self):
+        """Regression: "generate a wedding card" used to come back as a résumé,
+        because anything unmatched fell through to resume."""
+        cases = [
+            "Let's generate a wedding card in orange",
+            "make me a wedding card",
+            "I need an invitation card for my sister's engagement",
+            "birthday card for my friend",
+            "shaadi card with marigold theme",
+        ]
+        with patch("apps.studio.services.generate.llm.complete_json") as mocked:
+            for prompt in cases:
+                with self.subTest(prompt=prompt):
+                    self.assertEqual(classify(prompt), Artifact.Kind.INVITATION)
+        mocked.assert_not_called()
+
+    def test_image_requests_route_to_image(self):
+        for prompt in [
+            "generate an image of a sunset over mountains",
+            "create an image of a temple in watercolour",
+            "a picture of a marigold garland illustration",
+        ]:
+            with self.subTest(prompt=prompt):
+                self.assertEqual(classify(prompt), Artifact.Kind.IMAGE)
+
+    def test_the_last_resort_no_longer_silently_returns_a_cv(self):
+        """Even with the model unavailable, an occasion request lands sensibly."""
+        with patch(
+            "apps.studio.services.generate.llm.complete_json",
+            side_effect=ServiceError("down", 502, "llm_upstream_error"),
+        ):
+            self.assertEqual(
+                classify("something nice for our anniversary"), Artifact.Kind.INVITATION
+            )
 
     def test_cover_letter_beats_resume_when_both_words_appear(self):
         self.assertEqual(
@@ -103,6 +139,34 @@ class SchemaValidationTests(SimpleTestCase):
     def test_long_strings_are_truncated(self):
         data = schemas.validate_resume({"name": "x" * 500})
         self.assertEqual(len(data["name"]), 120)
+
+    def test_invitation_clamps_an_unknown_theme(self):
+        data = schemas.validate_invitation(
+            {"headline": "Aarav & Diya", "theme": {"palette": "neon", "motif": "swirly"}}
+        )
+        self.assertEqual(data["theme"]["palette"], "classic")
+        self.assertEqual(data["theme"]["motif"], "floral")
+
+    def test_invitation_keeps_a_recognised_theme(self):
+        data = schemas.validate_invitation(
+            {"headline": "Aarav & Diya", "theme": {"palette": "MARIGOLD", "motif": "paisley"}}
+        )
+        self.assertEqual(data["theme"]["palette"], "marigold")
+        self.assertEqual(data["theme"]["motif"], "paisley")
+
+    def test_invitation_drops_unnamed_events(self):
+        data = schemas.validate_invitation(
+            {
+                "headline": "Aarav & Diya",
+                "events": [{"name": "Mehendi", "when": "12 Feb"}, {"when": "13 Feb"}],
+            }
+        )
+        self.assertEqual(len(data["events"]), 1)
+
+    def test_invitation_never_fabricates_missing_details(self):
+        data = schemas.validate_invitation({"headline": "Aarav & Diya"})
+        for field in ("date_text", "venue_name", "rsvp", "hosts"):
+            self.assertEqual(data[field], "", field)
 
     def test_titles_are_derived_per_kind(self):
         self.assertEqual(
@@ -226,6 +290,54 @@ class ArtifactAPITests(AuthenticatedAPITestCase):
     def test_requires_authentication(self):
         self.client.force_authenticate(None)
         self.assertEqual(self.client.get("/api/artifacts/").status_code, 401)
+
+    def test_a_wedding_card_produces_an_invitation_end_to_end(self):
+        response = self.client.post(
+            self.url,
+            {"prompt": "Generate a wedding card in orange for Aarav and Diya"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["kind"], Artifact.Kind.INVITATION)
+        self.assertEqual(response.data["export_format"], "png")
+        self.assertTrue(response.data["data"]["headline"])
+
+    def test_image_generation_stores_a_file(self):
+        response = self.client.post(
+            self.url,
+            {"prompt": "Generate an image of marigold garlands, flat illustration"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["kind"], Artifact.Kind.IMAGE)
+        self.assertTrue(response.data["image_url"])
+
+        artifact = Artifact.objects.get(id=response.data["id"])
+        self.assertTrue(artifact.image)
+
+    def test_a_failed_image_leaves_no_empty_artifact_behind(self):
+        """If the image can't be produced, the row is rolled back rather than
+        left as a shell the user has to tidy up."""
+        with override_settings(USE_MOCK_AI=False):
+            with patch(
+                "apps.studio.services.generate.llm.complete_json",
+                return_value={"image_prompt": "a marigold", "alt_text": "x", "title": "Marigold"},
+            ):
+                with patch(
+                    "apps.studio.views.imagegen.generate_image",
+                    side_effect=ServiceError(
+                        "not on the free tier", 402, "image_generation_unavailable"
+                    ),
+                ):
+                    response = self.client.post(
+                        self.url,
+                        {"prompt": "Generate an image of a marigold"},
+                        format="json",
+                    )
+
+        self.assertEqual(response.status_code, 402)
+        self.assertEqual(response.data["code"], "image_generation_unavailable")
+        self.assertEqual(Artifact.objects.filter(kind=Artifact.Kind.IMAGE).count(), 0)
 
     def test_an_unusable_model_response_is_reported(self):
         with override_settings(USE_MOCK_AI=False):

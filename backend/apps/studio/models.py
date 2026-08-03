@@ -18,9 +18,13 @@ class Artifact(models.Model):
         TIMETABLE = "timetable", "Study timetable"
         COVER_LETTER = "cover_letter", "Cover letter"
         PROJECT_REPORT = "project_report", "Project report"
+        INVITATION = "invitation", "Invitation card"
+        IMAGE = "image", "Generated image"
 
     # Text documents export as vector PDF; visual ones export as PNG.
     PDF_KINDS = {Kind.RESUME, Kind.COVER_LETTER, Kind.PROJECT_REPORT}
+    # Kinds whose output is a raster file produced upstream, not rendered here.
+    FILE_KINDS = {Kind.IMAGE}
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="artifacts"
@@ -38,6 +42,9 @@ class Artifact(models.Model):
     title = models.CharField(max_length=255)
     prompt = models.TextField(blank=True, help_text="What the user originally asked for.")
     data = models.JSONField(default=dict)
+    # Only used by IMAGE artifacts, where the model returns pixels rather than
+    # structure. Everything else renders from `data` on the client.
+    image = models.FileField(upload_to="artifacts/%Y/%m/", null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -56,3 +63,7 @@ class Artifact(models.Model):
     @property
     def export_format(self) -> str:
         return "pdf" if self.kind in self.PDF_KINDS else "png"
+
+    @property
+    def image_url(self) -> str:
+        return self.image.url if self.image else ""

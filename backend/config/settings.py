@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.focus",
     "apps.insights",
     "apps.studio",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
@@ -157,6 +158,10 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
+# Image generation is a separate, paid-tier model on Gemini. See
+# apps/studio/services/imagegen.py.
+GEMINI_IMAGE_MODEL = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
+
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 
 # When true, roadmap generation uses a local deterministic stub instead of a real
@@ -164,6 +169,31 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 USE_MOCK_AI = env_bool("USE_MOCK_AI", False)
 
 LLM_TIMEOUT_SECONDS = int(os.getenv("LLM_TIMEOUT_SECONDS", "45"))
+
+# --- Notifications --------------------------------------------------------
+# Where the app is reachable, used for links inside notifications.
+APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:5173")
+
+# Web push. Generate a pair with: manage.py generate_vapid_keys
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
+VAPID_CONTACT_EMAIL = os.getenv("VAPID_CONTACT_EMAIL", "admin@example.com")
+
+# Email. Without EMAIL_HOST_USER, mail is printed to the console instead of
+# sent — so the feature is developable with no mailbox at all.
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "Smart Companion <noreply@example.com>"
+)
+EMAIL_BACKEND = (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if EMAIL_HOST_USER
+    else "django.core.mail.backends.console.EmailBackend"
+)
 
 # Keeps expected service-layer warnings out of the test output; the suite
 # asserts on behaviour, not log lines.

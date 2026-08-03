@@ -313,6 +313,101 @@ def validate_project_report(raw: dict) -> dict:
     }
 
 
+# --- invitation card ------------------------------------------------------
+
+INVITATION_SHAPE = """{
+  "occasion": "string - e.g. 'Wedding', 'Engagement', 'Birthday', 'Housewarming'",
+  "hosts": "string - who is inviting, may be empty",
+  "headline": "string - the names or the person the card is about",
+  "sub_headline": "string - e.g. 'are getting married' or 'turns 21'",
+  "date_text": "string - written out, e.g. 'Sunday, 14 February 2027'",
+  "time_text": "string - e.g. '11:00 AM onwards'",
+  "venue_name": "string",
+  "venue_address": "string",
+  "message": "string - one warm line, max 20 words",
+  "events": [ { "name": "Mehendi", "when": "13 Feb, 5 PM", "where": "Residence" } ],
+  "rsvp": "string - name and number, may be empty",
+  "footer_note": "string - short closing line, may be empty",
+  "theme": {
+    "palette": "one of: marigold, rose, royal, emerald, classic, midnight",
+    "motif": "one of: floral, paisley, geometric, minimal"
+  }
+}"""
+
+INVITATION_GUIDANCE = """\
+- Fill only what the request supports. Never invent names, dates, venues or \
+phone numbers — leave the field as an empty string instead.
+- `events` is for multi-function celebrations (mehendi, haldi, sangeet, \
+reception). Return an empty list if the request mentions only one event.
+- Match `palette` to any colour the user names: orange/saffron/marigold → \
+"marigold", pink/red → "rose", purple/gold → "royal", green → "emerald", \
+navy/black → "midnight", otherwise "classic".
+- Keep the tone warm and formal. No emoji.
+- Do not attempt to describe logos, emblems or party symbols — the card is \
+typeset, and any emblem is added by the user afterwards."""
+
+
+def validate_invitation(raw: dict) -> dict:
+    theme = raw.get("theme") if isinstance(raw.get("theme"), dict) else {}
+    palettes = {"marigold", "rose", "royal", "emerald", "classic", "midnight"}
+    motifs = {"floral", "paisley", "geometric", "minimal"}
+
+    palette = text(theme.get("palette"), 20).lower()
+    motif = text(theme.get("motif"), 20).lower()
+
+    return {
+        "occasion": text(raw.get("occasion"), 60) or "Celebration",
+        "hosts": text(raw.get("hosts"), 200),
+        "headline": text(raw.get("headline"), 120) or "You are invited",
+        "sub_headline": text(raw.get("sub_headline"), 160),
+        "date_text": text(raw.get("date_text"), 80),
+        "time_text": text(raw.get("time_text"), 80),
+        "venue_name": text(raw.get("venue_name"), 160),
+        "venue_address": text(raw.get("venue_address"), 300),
+        "message": text(raw.get("message"), 300),
+        "events": [
+            {
+                "name": text(event.get("name"), 60),
+                "when": text(event.get("when"), 80),
+                "where": text(event.get("where"), 120),
+            }
+            for event in dict_list(raw.get("events"), 6)
+            if text(event.get("name"), 60)
+        ],
+        "rsvp": text(raw.get("rsvp"), 200),
+        "footer_note": text(raw.get("footer_note"), 160),
+        "theme": {
+            "palette": palette if palette in palettes else "classic",
+            "motif": motif if motif in motifs else "floral",
+        },
+    }
+
+
+# --- generated image ------------------------------------------------------
+
+IMAGE_SHAPE = """{
+  "image_prompt": "string - a rich, specific visual description for an image \
+model: subject, style, composition, colour palette, lighting, aspect",
+  "alt_text": "string - one sentence describing the finished image",
+  "title": "string - 2 to 5 words naming the image"
+}"""
+
+IMAGE_GUIDANCE = """\
+- Expand the user's request into a prompt an image model can work with: name \
+the subject, the art style, the composition and the colour palette.
+- Never include text, words, lettering or numbers in the image prompt. Image \
+models render text badly, so any wording belongs on a typeset card instead.
+- Do not describe real company, political or institutional logos and emblems."""
+
+
+def validate_image_spec(raw: dict) -> dict:
+    return {
+        "image_prompt": text(raw.get("image_prompt"), 1200),
+        "alt_text": text(raw.get("alt_text"), 400),
+        "title": text(raw.get("title"), 120) or "Generated image",
+    }
+
+
 # --- registry -------------------------------------------------------------
 
 SCHEMAS = {
@@ -351,6 +446,20 @@ SCHEMAS = {
         "shape": PROJECT_REPORT_SHAPE,
         "guidance": PROJECT_REPORT_GUIDANCE,
         "validator": validate_project_report,
+        "title_field": "title",
+    },
+    Artifact.Kind.INVITATION: {
+        "label": "Invitation card",
+        "shape": INVITATION_SHAPE,
+        "guidance": INVITATION_GUIDANCE,
+        "validator": validate_invitation,
+        "title_field": "headline",
+    },
+    Artifact.Kind.IMAGE: {
+        "label": "Generated image",
+        "shape": IMAGE_SHAPE,
+        "guidance": IMAGE_GUIDANCE,
+        "validator": validate_image_spec,
         "title_field": "title",
     },
 }

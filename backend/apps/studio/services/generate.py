@@ -43,6 +43,19 @@ KEYWORDS = {
         ("project report", 5), ("report", 2), ("documentation", 3),
         ("synopsis", 3), ("thesis", 3), ("dissertation", 4), ("black book", 3),
     ],
+    Artifact.Kind.INVITATION: [
+        ("wedding card", 6), ("wedding invitation", 6), ("invitation card", 6),
+        ("invite", 4), ("invitation", 5), ("shaadi", 4), ("marriage card", 6),
+        ("engagement card", 6), ("birthday card", 6), ("anniversary card", 6),
+        ("greeting card", 5), ("housewarming", 4), ("reception card", 5),
+        ("card", 3), ("mehendi", 4), ("sangeet", 4), ("haldi", 4),
+    ],
+    Artifact.Kind.IMAGE: [
+        ("generate an image", 6), ("create an image", 6), ("an image of", 5),
+        ("a picture of", 5), ("illustration", 4), ("artwork", 4),
+        ("wallpaper", 4), ("poster", 3), ("banner", 3), ("photo of", 4),
+        ("draw", 3), ("render", 3),
+    ],
 }
 
 CLASSIFY_SYSTEM_PROMPT = """\
@@ -56,8 +69,14 @@ Allowed values:
 - "diet_plan" — meals, nutrition, eating schedule
 - "timetable" — a study or daily schedule
 - "project_report" — academic or project write-up
+- "invitation" — a card inviting people to an occasion: wedding, engagement,
+  birthday, housewarming, reception
+- "image" — a picture, illustration, poster or artwork, where the point is the
+  visual itself rather than any wording on it
 
-Pick the single closest match. If nothing fits well, reply "resume".
+Pick the single closest match. If the request is for something to look at
+rather than something to read, prefer "invitation" when it announces an
+occasion and "image" otherwise.
 """
 
 
@@ -94,7 +113,20 @@ def classify(prompt: str) -> str:
     except ServiceError:
         logger.warning("Classification call failed; falling back to keywords")
 
-    return kind or Artifact.Kind.RESUME
+    if kind:
+        return kind
+
+    # Last resort. Previously this was always "resume", which meant an
+    # unrecognised request — "make me a wedding card" — silently came back as a
+    # CV. Anything that reads as an occasion or a visual now lands somewhere
+    # sensible instead.
+    lowered = prompt.lower()
+    if any(word in lowered for word in ("card", "invit", "wedding", "birthday", "anniversary")):
+        return Artifact.Kind.INVITATION
+    if any(word in lowered for word in ("image", "picture", "poster", "design", "logo", "art")):
+        return Artifact.Kind.IMAGE
+    logger.info("Unclassifiable studio prompt, defaulting to resume: %r", prompt[:80])
+    return Artifact.Kind.RESUME
 
 
 def _build_system_prompt(kind: str) -> str:
@@ -242,6 +274,33 @@ def _mock_data(kind: str, prompt: str) -> dict:
                 "I would welcome the opportunity to discuss how I could contribute.",
             ],
             "closing": "Yours sincerely,",
+        }
+
+    if kind == Artifact.Kind.INVITATION:
+        return {
+            "occasion": "Wedding",
+            "hosts": "Mr and Mrs Sharma",
+            "headline": "Aarav & Diya",
+            "sub_headline": "request the pleasure of your company",
+            "date_text": "Sunday, 14 February 2027",
+            "time_text": "11:00 AM onwards",
+            "venue_name": "The Grand Palace",
+            "venue_address": "MG Road, Pune",
+            "message": "Together with our families, we invite you to share our joy.",
+            "events": [
+                {"name": "Mehendi", "when": "12 Feb, 5 PM", "where": "Residence"},
+                {"name": "Sangeet", "when": "13 Feb, 7 PM", "where": "The Grand Palace"},
+            ],
+            "rsvp": "Rohan · +91 90000 00000",
+            "footer_note": "We look forward to celebrating with you.",
+            "theme": {"palette": "marigold", "motif": "floral"},
+        }
+
+    if kind == Artifact.Kind.IMAGE:
+        return {
+            "image_prompt": f"A flat vector illustration of {subject}, warm palette",
+            "alt_text": f"Illustration of {subject}",
+            "title": subject[:40] or "Generated image",
         }
 
     return {

@@ -8,14 +8,21 @@ from .models import Artifact
 class ArtifactSerializer(serializers.ModelSerializer):
     kind_label = serializers.CharField(source="get_kind_display", read_only=True)
     export_format = serializers.CharField(read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Artifact
         fields = [
             "id", "kind", "kind_label", "title", "prompt", "data",
-            "goal", "export_format", "created_at", "updated_at",
+            "goal", "export_format", "image_url", "created_at", "updated_at",
         ]
         read_only_fields = ["id", "kind", "prompt", "created_at", "updated_at"]
+
+    def get_image_url(self, obj):
+        if not obj.image:
+            return ""
+        request = self.context.get("request")
+        return request.build_absolute_uri(obj.image.url) if request else obj.image.url
 
     def validate_goal(self, goal: Goal):
         request = self.context.get("request")
