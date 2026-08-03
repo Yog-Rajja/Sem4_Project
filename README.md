@@ -284,6 +284,39 @@ npm run dev
 
 Open <http://localhost:5173>, register an account, and create your first goal.
 
+### Model fallback
+
+The app never depends on one model. `LLM_FALLBACK_CHAIN` lists
+`provider:model` entries which are tried in order, and a model that is
+**exhausted (429)**, **retired (404)** or **overloaded (503)** falls through to
+the next automatically. Entries whose provider has no API key are skipped when
+the chain is parsed, so listing providers you haven't signed up for costs
+nothing.
+
+See what's alive:
+
+```bash
+.venv\Scripts\python.exe backend/manage.py check_llm --probe
+```
+
+Four providers are supported. **Groq and Grok are different companies** — a
+genuinely easy thing to mix up:
+
+| Key | Provider | Notes |
+|---|---|---|
+| `GEMINI_API_KEY` | Google AI Studio | Free, but 20 requests/day **per model** |
+| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) | Fast inference of open models; free tier |
+| `XAI_API_KEY` | [console.x.ai](https://console.x.ai) | Grok — xAI, generally paid |
+| `OPENROUTER_API_KEY` | [openrouter.ai](https://openrouter.ai) | Aggregator; has `:free` model variants |
+
+Because Gemini's allowance is per model, chaining five Gemini models already
+multiplies the daily budget roughly fivefold before any second provider is
+involved. Adding one non-Google key on top removes the cliff entirely.
+
+Only Gemini can read documents — attachments narrow the chain to multimodal
+providers automatically, so document analysis won't silently fall through to a
+text-only model.
+
 ### Free-tier limits — read this before demoing
 
 The Gemini free tier allows **20 generate requests per day, counted per
