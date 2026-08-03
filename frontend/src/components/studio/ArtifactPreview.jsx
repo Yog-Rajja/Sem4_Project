@@ -3,6 +3,7 @@ import Button from '../ui/Button'
 import Spinner from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
 import { DownloadIcon } from '../ui/Icons'
+import CertificateCard from './visual/CertificateCard'
 import DietPlanCard from './visual/DietPlanCard'
 import InvitationCard from './visual/InvitationCard'
 import TimetableCard from './visual/TimetableCard'
@@ -14,6 +15,7 @@ const VISUAL_RENDERERS = {
   diet_plan: DietPlanCard,
   timetable: TimetableCard,
   invitation: InvitationCard,
+  certificate: CertificateCard,
 }
 
 function slugify(value) {

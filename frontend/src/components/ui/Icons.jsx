@@ -261,6 +261,46 @@ export const GearIcon = (p) => (
   </Svg>
 )
 
+export const TrophyIcon = (p) => (
+  <Svg {...p}>
+    <path d="M7 4h10v6a5 5 0 0 1-10 0z" />
+    <path d="M7 5.5H4a3 3 0 0 0 3 4.5M17 5.5h3a3 3 0 0 1-3 4.5" />
+    <path d="M12 15v3M9 21h6M9.5 21c0-1.8.7-3 2.5-3s2.5 1.2 2.5 3" />
+  </Svg>
+)
+
+export const NetworkIcon = (p) => (
+  <Svg {...p}>
+    <circle cx="6" cy="6" r="2.5" />
+    <circle cx="18" cy="6" r="2.5" />
+    <circle cx="12" cy="18" r="2.5" />
+    <path d="M8 7.5 10.5 16M16 7.5 13.5 16M8.3 6h7.4" />
+  </Svg>
+)
+
+export const UsersIcon = (p) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6" />
+    <circle cx="17.5" cy="8.5" r="2.5" />
+    <path d="M15.5 14.3c2.7.3 4.5 2.6 4.5 5.7" />
+  </Svg>
+)
+
+export const LinkIcon = (p) => (
+  <Svg {...p}>
+    <path d="M9.5 14.5 14.5 9.5" />
+    <path d="M11 7l1.5-1.5a4 4 0 0 1 5.6 5.6L16.5 12.6M13 17l-1.5 1.5a4 4 0 0 1-5.6-5.6L7.5 11.4" />
+  </Svg>
+)
+
+export const CrownIcon = (p) => (
+  <Svg {...p}>
+    <path d="M4 8.5 8 12l4-6.5 4 6.5 4-3.5-1.5 9h-13z" />
+    <path d="M6 19.5h12" />
+  </Svg>
+)
+
 export const CompassIcon = (p) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="9" />
