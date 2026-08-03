@@ -93,11 +93,15 @@ class GeminiTransportTests(SimpleTestCase):
         with patch.object(llm.requests, "post", return_value=self._response(200, payload)):
             self.assertEqual(llm.complete_text("sys", "user"), '{"a": 1}')
 
-    def test_rate_limit_gets_a_human_message(self):
+    def test_quota_refusal_points_at_the_model_not_just_the_clock(self):
+        """Google returns 429 with limit:0 when the model has no free-tier
+        allocation, so "wait and retry" alone would be misleading advice."""
         with patch.object(llm.requests, "post", return_value=self._response(429, {})):
             with self.assertRaises(ServiceError) as ctx:
                 llm.complete_text("sys", "user")
-        self.assertIn("rate limit", ctx.exception.detail.lower())
+        detail = ctx.exception.detail.lower()
+        self.assertIn("quota", detail)
+        self.assertIn("gemini_model", detail)
 
     def test_bad_key_gets_a_human_message(self):
         with patch.object(llm.requests, "post", return_value=self._response(403, {})):

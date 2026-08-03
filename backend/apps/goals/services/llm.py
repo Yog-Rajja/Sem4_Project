@@ -109,7 +109,14 @@ _PROVIDERS = {
 
 def _friendly_http_message(provider: str, status: int) -> str:
     if status == 429:
-        return f"{provider} rate limit reached. Wait a moment and try again."
+        # A 429 is usually a real rate limit, but Google also returns it with
+        # "limit: 0" when the configured model has no free-tier allocation for
+        # the key at all — which no amount of waiting fixes.
+        return (
+            f"{provider} refused the request for quota reasons. Wait a moment and "
+            f"retry; if it keeps happening, check that GEMINI_MODEL is a model your "
+            f"key can actually use (run: manage.py verify_ai)."
+        )
     if status in (401, 403):
         return f"{provider} rejected the API key. Check your key in backend/.env."
     return f"{provider} is unavailable right now (HTTP {status}). Please try again."
