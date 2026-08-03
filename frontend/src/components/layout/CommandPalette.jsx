@@ -10,6 +10,7 @@ import {
   CalendarIcon,
   ChartIcon,
   CheckSquareIcon,
+  FileIcon,
   HomeIcon,
   MoonIcon,
   PlusIcon,
@@ -98,6 +99,14 @@ export default function CommandPalette({ open, onClose }) {
         run: () => navigate('/focus'),
       },
       {
+        id: 'studio',
+        group: 'Actions',
+        label: 'Build a document',
+        hint: 'Résumé, diet chart, timetable, cover letter',
+        icon: FileIcon,
+        run: () => navigate('/studio'),
+      },
+      {
         id: 'theme',
         group: 'Actions',
         label: isDark ? 'Switch to light mode' : 'Switch to dark mode',
@@ -111,6 +120,7 @@ export default function CommandPalette({ open, onClose }) {
       { id: 'nav-goals', label: 'Goals', icon: TargetIcon, to: '/goals' },
       { id: 'nav-tasks', label: 'Tasks', icon: CheckSquareIcon, to: '/tasks' },
       { id: 'nav-focus', label: 'Focus', icon: TimerIcon, to: '/focus' },
+      { id: 'nav-studio', label: 'Studio', icon: WandIcon, to: '/studio' },
       { id: 'nav-calendar', label: 'Calendar', icon: CalendarIcon, to: '/calendar' },
       { id: 'nav-analytics', label: 'Analytics', icon: ChartIcon, to: '/analytics' },
     ].map((page) => ({

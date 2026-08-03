@@ -17,9 +17,12 @@ import Focus from './pages/Focus'
 import Calendar from './pages/Calendar'
 import NotFound from './pages/NotFound'
 
-// Recharts is by far the heaviest dependency and only one screen needs it, so
-// Analytics loads on demand instead of weighing down first paint.
+// Recharts and the PDF engine are the two heaviest dependencies and each is
+// used by exactly one screen, so both load on demand rather than weighing down
+// first paint.
 const Analytics = lazy(() => import('./pages/Analytics'))
+const Studio = lazy(() => import('./pages/Studio'))
+const PublicRoadmap = lazy(() => import('./pages/PublicRoadmap'))
 
 function FullPageSpinner() {
   return (
@@ -93,6 +96,14 @@ function AppRoutes() {
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/focus" element={<Focus />} />
           <Route
+            path="/studio"
+            element={
+              <Suspense fallback={<PageSpinner />}>
+                <Studio />
+              </Suspense>
+            }
+          />
+          <Route
             path="/analytics"
             element={
               <Suspense fallback={<PageSpinner />}>
@@ -102,6 +113,16 @@ function AppRoutes() {
           />
           <Route path="/calendar" element={<Calendar />} />
         </Route>
+
+        {/* Public share link — deliberately outside the authenticated shell. */}
+        <Route
+          path="/r/:token"
+          element={
+            <Suspense fallback={<FullPageSpinner />}>
+              <PublicRoadmap />
+            </Suspense>
+          }
+        />
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<NotFound />} />
