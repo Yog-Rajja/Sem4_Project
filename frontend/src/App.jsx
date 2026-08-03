@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './components/ui/Toast'
 import AppLayout from './components/layout/AppLayout'
 import Spinner from './components/ui/Spinner'
@@ -12,6 +13,7 @@ import Goals from './pages/Goals'
 import GoalDetail from './pages/GoalDetail'
 import NewGoal from './pages/NewGoal'
 import Tasks from './pages/Tasks'
+import Focus from './pages/Focus'
 import Calendar from './pages/Calendar'
 import NotFound from './pages/NotFound'
 
@@ -89,6 +91,7 @@ function AppRoutes() {
           <Route path="/goals/new" element={<NewGoal />} />
           <Route path="/goals/:id" element={<GoalDetail />} />
           <Route path="/tasks" element={<Tasks />} />
+          <Route path="/focus" element={<Focus />} />
           <Route
             path="/analytics"
             element={
@@ -108,10 +111,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <AppRoutes />
-      </ToastProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

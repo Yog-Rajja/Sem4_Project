@@ -37,9 +37,57 @@
   --shadow-pop: 0 10px 32px -8px rgb(16 24 40 / 0.18);
 }
 
+/* Dark mode is a *selected* set of values, not an inverted one: surfaces lift
+   instead of dropping, borders gain contrast, and the brand hue is stepped up
+   so it still reads against a dark surface. Declared under both the media
+   query (OS setting) and the data-theme scope (explicit toggle), with the
+   toggle winning in both directions. */
+@layer theme {
+  :root[data-theme='dark'] {
+    --color-canvas: #0d0d10;
+    --color-surface: #16161a;
+    --color-surface-muted: #1c1c21;
+    --color-line: #27272e;
+    --color-line-strong: #3a3a44;
+
+    --color-ink: #f4f4f5;
+    --color-ink-soft: #b4b4bd;
+    --color-ink-muted: #85858f;
+
+    --color-brand-50: #1e1b3a;
+    --color-brand-100: #272251;
+    --color-brand-200: #383074;
+    --color-brand-400: #8b93f8;
+    --color-brand-500: #7c83f5;
+    --color-brand-600: #6f75ef;
+    --color-brand-700: #a5abff;
+
+    --color-success: #34d399;
+    --color-success-soft: #0f2d24;
+    --color-warning: #fbbf24;
+    --color-warning-soft: #33280d;
+    --color-danger: #f87171;
+    --color-danger-soft: #331717;
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.24);
+    --shadow-pop: 0 12px 36px -8px rgb(0 0 0 / 0.6);
+
+    color-scheme: dark;
+  }
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+  }
+
+  /* Colour transitions on the theme switch, but never on first paint. */
+  html[data-theme-ready] body,
+  html[data-theme-ready] body * {
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease;
   }
 
   body {
