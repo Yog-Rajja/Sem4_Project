@@ -4,7 +4,7 @@ import PageShell from '../components/layout/PageShell'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card, { CardHeader } from '../components/ui/Card'
-import { Select } from '../components/ui/Input'
+import { Input, Select } from '../components/ui/Input'
 import Spinner from '../components/ui/Spinner'
 import { ErrorBanner } from '../components/ui/ErrorState'
 import { useToast } from '../components/ui/Toast'
@@ -65,17 +65,44 @@ export default function Settings() {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [perm, setPerm] = useState(permission())
+  const [emailDraft, setEmailDraft] = useState('')
+  const [preview, setPreview] = useState(null)
 
   const load = useCallback(async () => {
     try {
-      const { data } = await api.get('/notifications/settings/')
-      setSettings(data)
+      const [settingsRes, previewRes] = await Promise.all([
+        api.get('/notifications/settings/'),
+        api.get('/notifications/preview/'),
+      ])
+      setSettings(settingsRes.data)
+      setEmailDraft(settingsRes.data.email_address || '')
+      setPreview(previewRes.data)
     } catch (err) {
       setError(errorMessage(err, 'Could not load your settings.'))
     } finally {
       setLoading(false)
     }
   }, [])
+
+  async function saveEmail() {
+    setBusy('email')
+    setError('')
+    try {
+      const { data } = await api.patch('/notifications/settings/', {
+        email_address: emailDraft.trim(),
+      })
+      setSettings((current) => ({ ...current, ...data }))
+      toast.success(
+        data.resolved_email
+          ? `Digests will go to ${data.resolved_email}.`
+          : 'Address cleared.',
+      )
+    } catch (err) {
+      setError(errorMessage(err, 'That address was not accepted.'))
+    } finally {
+      setBusy('')
+    }
+  }
 
   useEffect(() => {
     load()
@@ -204,10 +231,10 @@ export default function Settings() {
 
           <Row
             title="Email me"
-            description="The same digest as an email, useful when notifications are off."
+            description="The same digest as an email, with every task listed and how many are left."
             warning={
               settings && !settings.email_supported
-                ? 'No mailbox configured. Add EMAIL_HOST_USER and EMAIL_HOST_PASSWORD to backend/.env — until then emails print to the server console.'
+                ? 'No mailbox configured on the server yet. Add EMAIL_HOST_USER and EMAIL_HOST_PASSWORD to backend/.env — until then emails print to the server console instead of sending.'
                 : ''
             }
           >
@@ -216,6 +243,45 @@ export default function Settings() {
               checked={Boolean(settings?.email_daily)}
               onChange={(next) => patch({ email_daily: next })}
             />
+          </Row>
+
+          <Row
+            title="Send to"
+            description={
+              settings?.account_email
+                ? `Leave blank to use your account address (${settings.account_email}).`
+                : 'Your account has no email address, so set one here.'
+            }
+          >
+            <div className="w-64">
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  aria-label="Digest email address"
+                  placeholder={settings?.account_email || 'you@example.com'}
+                  value={emailDraft}
+                  onChange={(e) => setEmailDraft(e.target.value)}
+                  invalid={Boolean(emailDraft) && !emailDraft.includes('@')}
+                />
+                <Button
+                  variant="secondary"
+                  size="md"
+                  disabled={emailDraft === (settings?.email_address || '')}
+                  loading={busy === 'email'}
+                  onClick={saveEmail}
+                >
+                  Save
+                </Button>
+              </div>
+              {settings?.resolved_email && (
+                <p className="mt-1.5 text-[12px] text-ink-muted">
+                  Digests go to{' '}
+                  <span className="font-medium text-ink-soft">
+                    {settings.resolved_email}
+                  </span>
+                </p>
+              )}
+            </div>
           </Row>
 
           <Row
@@ -246,6 +312,65 @@ export default function Settings() {
             </Button>
           </div>
         </Card>
+
+        {preview && (
+          <Card>
+            <CardHeader
+              title="What today's message would say"
+              subtitle="Generated from your live tasks — nothing is sent"
+            />
+            <div className="px-5 pb-5">
+              <p className="text-[15px] font-semibold text-ink">{preview.title}</p>
+              <p className="mt-1 text-[13px] text-ink-muted">{preview.body}</p>
+
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 border-y border-line py-2.5 text-[12.5px] text-ink-muted">
+                <span>
+                  <strong className="font-semibold text-ink">
+                    {preview.counts.today}
+                  </strong>{' '}
+                  due today
+                </span>
+                <span>
+                  <strong className="font-semibold text-danger">
+                    {preview.counts.overdue}
+                  </strong>{' '}
+                  overdue
+                </span>
+                <span>
+                  <strong className="font-semibold text-ink">
+                    {preview.counts.this_week}
+                  </strong>{' '}
+                  this week
+                </span>
+                <span>
+                  <strong className="font-semibold text-ink">
+                    {preview.counts.remaining}
+                  </strong>{' '}
+                  left in total
+                </span>
+              </div>
+
+              {preview.goals.length > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {preview.goals.map((goal) => (
+                    <li
+                      key={goal.title}
+                      className="flex items-center justify-between gap-3 text-[13px]"
+                    >
+                      <span className="truncate text-ink-soft">{goal.title}</span>
+                      <span className="shrink-0 text-ink-muted">
+                        <strong className="font-semibold text-brand-600">
+                          {goal.left}
+                        </strong>{' '}
+                        left of {goal.total}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
+        )}
 
         <Card>
           <CardHeader title="Appearance" />

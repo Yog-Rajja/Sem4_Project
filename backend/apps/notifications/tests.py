@@ -101,6 +101,38 @@ class SettingsAPITests(AuthenticatedAPITestCase):
             self.client.patch(self.url, {"send_hour": 25}, format="json").status_code, 400
         )
 
+    def test_the_resolved_address_defaults_to_the_account(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.data["resolved_email"], self.user.email)
+        self.assertEqual(response.data["account_email"], self.user.email)
+        self.assertEqual(response.data["email_address"], "")
+
+    def test_a_custom_address_can_be_set(self):
+        response = self.client.patch(
+            self.url, {"email_address": "elsewhere@example.com"}, format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["resolved_email"], "elsewhere@example.com")
+
+    def test_a_malformed_address_is_rejected(self):
+        response = self.client.patch(
+            self.url, {"email_address": "not-an-email"}, format="json"
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_clearing_the_override_falls_back_to_the_account(self):
+        self.client.patch(self.url, {"email_address": "x@example.com"}, format="json")
+        response = self.client.patch(self.url, {"email_address": ""}, format="json")
+        self.assertEqual(response.data["resolved_email"], self.user.email)
+
+    def test_email_cannot_be_enabled_with_nowhere_to_send(self):
+        """Otherwise it would fail silently every morning."""
+        self.user.email = ""
+        self.user.save()
+        response = self.client.patch(self.url, {"email_daily": True}, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email_address", response.data)
+
     @override_settings(**VAPID)
     def test_the_public_key_is_exposed_for_the_browser(self):
         response = self.client.get(self.url)
@@ -241,9 +273,11 @@ class EmailDeliveryTests(AuthenticatedAPITestCase):
     def setUp(self):
         super().setUp()
         goal = Goal.objects.create(user=self.user, title="Crack GATE")
-        milestone = Milestone.objects.create(goal=goal, title="Fundamentals")
+        self.milestone = Milestone.objects.create(goal=goal, title="Fundamentals")
         Task.objects.create(
-            milestone=milestone, title="Revise pointers", due_date=timezone.localdate()
+            milestone=self.milestone,
+            title="Revise pointers",
+            due_date=timezone.localdate(),
         )
 
     def test_an_email_is_sent_with_both_formats(self):
@@ -257,11 +291,53 @@ class EmailDeliveryTests(AuthenticatedAPITestCase):
         self.assertEqual(message.to, [self.user.email])
         self.assertTrue(message.alternatives)
 
-    def test_a_user_with_no_address_is_skipped(self):
+    def test_a_user_with_no_address_anywhere_is_skipped(self):
         self.user.email = ""
         self.user.save()
         self.assertFalse(services.send_email(self.user, services.build_digest(self.user)))
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_the_account_address_is_used_by_default(self):
+        services.send_email(self.user, services.build_digest(self.user))
+        self.assertEqual(mail.outbox[0].to, [self.user.email])
+
+    def test_a_configured_address_overrides_the_account_one(self):
+        NotificationSetting.objects.update_or_create(
+            user=self.user, defaults={"email_address": "elsewhere@example.com"}
+        )
+        services.send_email(self.user, services.build_digest(self.user))
+        self.assertEqual(mail.outbox[0].to, ["elsewhere@example.com"])
+
+    def test_an_override_works_even_with_no_account_address(self):
+        self.user.email = ""
+        self.user.save()
+        NotificationSetting.objects.update_or_create(
+            user=self.user, defaults={"email_address": "only@example.com"}
+        )
+        self.assertTrue(services.send_email(self.user, services.build_digest(self.user)))
+        self.assertEqual(mail.outbox[0].to, ["only@example.com"])
+
+    def test_the_email_lists_the_tasks_and_what_is_left(self):
+        Task.objects.create(
+            milestone=self.milestone,
+            title="Fix the parser",
+            due_date=timezone.localdate() - dt.timedelta(days=2),
+        )
+        services.send_email(self.user, services.build_digest(self.user))
+        body = mail.outbox[0].body
+
+        self.assertIn("Revise pointers", body)
+        self.assertIn("Fix the parser", body)
+        self.assertIn("OVERDUE", body)
+        self.assertIn("DUE TODAY", body)
+        self.assertIn("TASKS LEFT PER GOAL", body)
+        self.assertIn("2 task(s) remaining in total", body)
+
+    def test_the_html_part_lists_them_too(self):
+        services.send_email(self.user, services.build_digest(self.user))
+        html = mail.outbox[0].alternatives[0][0]
+        self.assertIn("Revise pointers", html)
+        self.assertIn("left of", html)
 
 
 @override_settings(

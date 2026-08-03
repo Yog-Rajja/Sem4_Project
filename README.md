@@ -110,10 +110,17 @@ up once:
 Paste the pair into `backend/.env`. VAPID is just a signature proving the push
 came from your server — there is no account to create anywhere.
 
-**Email** uses Django's SMTP backend. Leave `EMAIL_HOST_USER` blank and mail
-prints to the server console instead of sending, so the whole flow is
+**Email** uses Django's SMTP backend. Digests go to your account address by
+default, or to a different one you set in Settings — useful when the address
+you signed up with isn't the one you read. Leave `EMAIL_HOST_USER` blank and
+mail prints to the server console instead of sending, so the whole flow is
 developable with no mailbox. For Gmail you need an
 [App Password](https://myaccount.google.com/apppasswords), not your normal one.
+
+The message lists **every task**, grouped into overdue (with how late),
+due today, and coming this week — then **how many are left per goal** and in
+total. Settings shows a live preview of exactly what today's message would say,
+without sending anything.
 
 Both are **off by default** and switched on per user in **Settings**, which
 also has a *Send a test* button — otherwise there's no way to know it works

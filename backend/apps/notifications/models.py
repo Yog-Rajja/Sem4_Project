@@ -16,6 +16,9 @@ class NotificationSetting(models.Model):
     )
     push_daily = models.BooleanField(default=False)
     email_daily = models.BooleanField(default=False)
+    # Where digests go. Blank means "use the account's own email", so the
+    # common case needs no configuration, but a different inbox can be set.
+    email_address = models.EmailField(blank=True)
     # Local hour (0-23) the digest should go out.
     send_hour = models.PositiveSmallIntegerField(default=8)
     # Guards against a re-run of the scheduler double-sending.
@@ -31,6 +34,11 @@ class NotificationSetting(models.Model):
     @property
     def any_enabled(self) -> bool:
         return self.push_daily or self.email_daily
+
+    @property
+    def resolved_email(self) -> str:
+        """The address digests actually go to."""
+        return (self.email_address or self.user.email or "").strip()
 
 
 class PushSubscription(models.Model):
