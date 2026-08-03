@@ -4,6 +4,7 @@ import Spinner from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
 import { DownloadIcon } from '../ui/Icons'
 import DietPlanCard from './visual/DietPlanCard'
+import InvitationCard from './visual/InvitationCard'
 import TimetableCard from './visual/TimetableCard'
 
 // The PDF engine is ~400 kB and only loads once a text document is opened.
@@ -12,6 +13,7 @@ const PdfFrame = lazy(() => import('./PdfFrame'))
 const VISUAL_RENDERERS = {
   diet_plan: DietPlanCard,
   timetable: TimetableCard,
+  invitation: InvitationCard,
 }
 
 function slugify(value) {
@@ -54,6 +56,37 @@ export default function ArtifactPreview({ artifact }) {
       setExporting(false)
     }
   }, [artifact.title, toast])
+
+  // An image artifact is already a raster file; there is nothing to render.
+  // Placed after the hooks above so they run in the same order every time.
+  if (artifact.kind === 'image') {
+    return (
+      <div>
+        <div className="mb-3 flex justify-end">
+          <a
+            href={artifact.image_url}
+            download={`${slugify(artifact.title)}.png`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-9.5 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+          >
+            <DownloadIcon size={15} />
+            Download image
+          </a>
+        </div>
+        <div className="grid place-items-center rounded-card border border-line bg-surface-muted p-4">
+          <img
+            src={artifact.image_url}
+            alt={artifact.data?.alt_text || artifact.title}
+            className="max-h-[70vh] w-auto rounded-lg shadow-card"
+          />
+        </div>
+        {artifact.data?.alt_text && (
+          <p className="mt-2 text-[12.5px] text-ink-muted">{artifact.data.alt_text}</p>
+        )}
+      </div>
+    )
+  }
 
   if (Visual) {
     return (
