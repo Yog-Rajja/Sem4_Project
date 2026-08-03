@@ -174,7 +174,49 @@ Point at the type, summary and key points. Then click **Turn into a roadmap**.
 > "And this is the loop closing. The syllabus becomes milestones — and they're
 > its actual units, not a generic study plan."
 
-## 5f. Share it (20 seconds)
+## 5f. Skill map (45 seconds)
+
+On a goal with a few milestones, scroll to **Skill map** and click **Generate**.
+
+> "It doesn't just chain the milestones in order — it breaks each one into its
+> real sub-topics and figures out which ones actually depend on which. Watch
+> this node — it feeds two different later topics, not just the next one in
+> the list. That's a real dependency graph, not a fancier progress bar."
+
+Complete a task in the first milestone, then point at the graph again — the
+node's colour has moved, with nothing regenerated.
+
+> "The structure is cached, but every node's completion is read live off the
+> real milestone. It can never show a topic as done that isn't."
+
+## 5g. Certificate (20 seconds)
+
+On a finished goal (or finish one live by ticking its last task), point at the
+banner that appears.
+
+> "The name, the dates, the totals — all computed from what actually
+> happened, not written by the model. The AI only gets asked for one line of
+> flourish, and if every provider's quota is spent that morning, it falls back
+> to a canned line instead of failing. The achievement already happened; it
+> shouldn't need an API call to prove it."
+
+Download it, show the PNG.
+
+## 5h. Circles (1 minute — best with two browser windows)
+
+Open **Circles** → **New circle**, name it, open **Invite**, copy the link.
+In a second window (or your phone), paste the link and join.
+
+> "This is the one feature in the whole app that isn't solo. It's not a chat,
+> it's not shared goals — it's a leaderboard of effort."
+
+Tick off a task or two in each account, reload the circle page.
+
+> "Ranked by what got done this week. And notice what's *not* here — no goal
+> titles, no task names, no email addresses. Just the numbers. The point is
+> encouragement, not surveillance."
+
+## 5i. Share it (20 seconds)
 
 On the goal, click **Share** → turn on → open the link in a private window.
 
@@ -253,6 +295,25 @@ There isn't one, deliberately. Gemini is multimodal, so a scan or photo is sent
 as image data and the model reads layout as well as characters. Text-bearing
 PDFs never reach the model at all — pypdf extracts them locally, which is free
 and exact.
+
+**"How do you stop the skill graph from having a dependency cycle?"**
+Validation walks the accepted edges with a DFS before adding each new one —
+if the target can already reach the source, adding it would close a loop, so
+it's dropped. It's checked in code, not trusted to the model's judgement.
+
+**"Why compute the certificate's numbers yourself instead of asking the AI
+for the whole thing?"**
+Because a language model asked to write "your stats" will happily invent
+plausible ones. Every number on the certificate is a real database query;
+the model only ever gets asked for one sentence of prose, and even that falls
+back to a canned line if no provider is available — nothing about claiming an
+achievement should depend on a model being up.
+
+**"What can circle members actually see about each other?"**
+Four numbers: tasks completed this week, current streak, overall completion
+percentage, active goal count. Never a goal title, a task title, or an email —
+there's a test suite specifically asserting none of those strings ever appear
+in a leaderboard response.
 
 **"How is the streak calculated?"**
 From completion timestamps and focus sessions, bucketed into local dates in

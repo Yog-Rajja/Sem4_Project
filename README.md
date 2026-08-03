@@ -21,6 +21,7 @@ Built as a final-year engineering project.
 | `/tasks` | Cross-goal task list, filterable by goal / status / due date |
 | `/focus` | Pomodoro timer bound to a task, session history, streak + activity heatmap |
 | `/studio` | Describe a document → AI builds it → download as PDF or PNG |
+| `/circles` | Small groups who see each other's progress, not each other's goals |
 | `/r/:token` | Public read-only roadmap (no account needed) |
 | `/analytics` | Overall completion, upcoming workload, per-goal progress |
 | `/calendar` | A week-list of tasks grouped by day |
@@ -180,6 +181,55 @@ syllabus, get a revision plan whose milestones are its units.
 
 Analysis is explicit rather than automatic on upload, because reading costs one
 of the day's requests.
+
+### Skill dependency graph
+
+Every goal can generate a graph of the *topics* inside it — not the milestones
+themselves, but the 1–3 real sub-skills within each one — connected by
+prerequisite edges the AI infers ("Arrays" feeds both "Sorting" and "Binary
+Search", say). Verified live: real generations produce genuine branching and
+cross-milestone edges, not a bare chronological chain, and server-side
+validation actively rejects any edge that would close a cycle rather than
+trusting the model to avoid one.
+
+Structure is generated once and cached; each node's **completion is never
+stored** — it's always read live off the milestone it points at, the same way
+`Goal.progress` is computed rather than stored, so the graph can't show a
+topic as done that you later reopened. Clicking a node scrolls to and
+highlights its milestone below.
+
+Rendered with a small hand-rolled force-directed layout (`lib/forceLayout.js`)
+rather than a graph library — spring/repulsion physics running synchronously
+on mount — matching the app's existing preference for small custom visuals
+(the focus countdown ring, the activity heatmap) over new dependencies.
+
+### Completion certificates
+
+When every task in a goal is done, claim a certificate — a designed,
+downloadable PNG keepsake. Unlike everything else in Studio, its facts
+(recipient, goal, dates, totals) are **computed server-side from the goal's
+real history**, not written from a prompt — the same pattern as the weekly
+review. The AI is only ever asked for one celebratory line, and if every
+provider is exhausted it falls back to a canned one instead: an achievement
+that already happened should never be blocked by a spent daily quota.
+
+Certificates are deliberately unreachable through the general "describe what
+you need" Studio box — a dedicated `/api/goals/{id}/certificate/` endpoint is
+the only way to one, so a prompt can never talk the model into inventing an
+accomplishment that didn't happen.
+
+### Accountability circles
+
+Small groups who see each other's *progress*, never each other's *plans*. A
+circle's leaderboard shows only aggregate numbers — tasks completed this week,
+current streak, overall completion percentage — ranked, with no goal titles,
+no task titles, and no email addresses ever exposed. Verified live: two real
+accounts, real completions, correct ranking, and every privacy check passing.
+
+Joining is via an unguessable invite link (the same `share_token` pattern used
+for public roadmaps), and the owner can reset it at any time, instantly
+invalidating the old one. Leaving an empty circle deletes it automatically
+rather than leaving an orphaned row an old link still points at.
 
 ### Sharing
 
@@ -372,13 +422,16 @@ search link, plus a note explaining that videos are unavailable.
 .venv\Scripts\python.exe backend/manage.py test
 ```
 
-242 tests covering auth and JWT issuing, roadmap schema validation, LLM JSON
-parsing and retry behaviour, resource discovery and its fallbacks, every API
-endpoint and filter, progress calculation, streak and heatmap logic, alert
-derivation, re-planning (including hallucinated-id rejection and date
-clamping), daily planning, studio intent classification and schema coercion,
-document preparation across file types, weekly-review aggregation, share-link
-privacy, and per-user data isolation on every resource.
+386 tests covering auth and JWT issuing, roadmap schema validation, LLM JSON
+parsing and retry behaviour, model/provider fallback, resource discovery and
+its fallbacks, every API endpoint and filter, progress calculation, streak
+and heatmap logic, alert derivation, re-planning (including hallucinated-id
+rejection and date clamping), daily planning, studio intent classification
+and schema coercion, document preparation across file types, weekly-review
+aggregation, share-link privacy, skill-graph cycle rejection and live
+progress, certificate generation with its AI-unavailable fallback, circle
+leaderboard privacy and permissions, and per-user data isolation on every
+resource.
 
 The suite needs no running server, no API keys and no network — the Gemini and
 YouTube calls are mocked at the transport boundary, and uploads go to a
@@ -414,6 +467,14 @@ All endpoints require `Authorization: Bearer <access>` except register/login.
 | `GET` | `/api/alerts/` | Derived notification feed |
 | `GET/POST` | `/api/weekly-review/` | Cached retrospective · regenerate |
 | `GET/POST/DELETE` | `/api/documents/` | Document vault |
+| `GET` | `/api/goals/{id}/skillmap/` | Fetch the skill graph, progress computed live |
+| `POST` | `/api/goals/{id}/skillmap/generate/` | Generate or rebuild the graph |
+| `GET/POST` | `/api/goals/{id}/certificate/` | Fetch / claim a completion certificate |
+| `GET/POST` | `/api/circles/` | List circles you're in · create one |
+| `GET/DELETE` | `/api/circles/{id}/` | Leaderboard detail · delete (owner only) |
+| `POST` | `/api/circles/join/` | Join via invite token |
+| `POST` | `/api/circles/{id}/leave/` | Leave (deletes the circle if you were last) |
+| `POST` | `/api/circles/{id}/regenerate-invite/` | Rotate the invite link (owner only) |
 | `POST` | `/api/documents/{id}/analyse/` | Read a document and extract meaning |
 | `POST` | `/api/documents/{id}/to-goal/` | Turn a document into a roadmap preview |
 | `GET` | `/api/artifacts/kinds/` | What the studio can build |
