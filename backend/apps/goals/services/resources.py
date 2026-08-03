@@ -6,6 +6,7 @@ milestone's `search_query` drives a real YouTube Data API search, plus a
 constructed Google search URL that costs nothing and can never 404.
 """
 
+import html
 import logging
 from urllib.parse import quote_plus
 
@@ -68,13 +69,15 @@ def _fetch_youtube(query: str) -> list[dict]:
             or thumbnails.get("default")
             or {}
         )
+        # The API returns HTML-escaped text ("Tips &amp; Tricks"), which would
+        # otherwise render literally in the UI.
         videos.append(
             {
-                "title": (snippet.get("title") or "Untitled video")[:255],
+                "title": html.unescape(snippet.get("title") or "Untitled video")[:255],
                 "url": f"https://www.youtube.com/watch?v={video_id}",
                 "source": Resource.Source.YOUTUBE,
                 "thumbnail_url": thumb.get("url", "")[:500],
-                "channel_title": (snippet.get("channelTitle") or "")[:255],
+                "channel_title": html.unescape(snippet.get("channelTitle") or "")[:255],
             }
         )
     return videos

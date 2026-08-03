@@ -94,6 +94,27 @@ class FetchResourcesTests(TestCase):
         self.assertEqual(len(created), 1)
         self.assertEqual(created[0].source, Resource.Source.GOOGLE_SEARCH)
 
+    def test_html_entities_in_titles_are_decoded(self):
+        """The API returns escaped text; rendering it raw shows "&amp;" to users."""
+        payload = {
+            "items": [
+                {
+                    "id": {"videoId": "abc"},
+                    "snippet": {
+                        "title": "Tips &amp; Tricks for GATE &#39;26",
+                        "channelTitle": "Physics &amp; Maths",
+                        "thumbnails": {},
+                    },
+                }
+            ]
+        }
+        with patch.object(service.requests, "get", return_value=FakeResponse(200, payload)):
+            created, _ = service.fetch_resources_for_milestone(self.milestone)
+
+        video = next(r for r in created if r.source == Resource.Source.YOUTUBE)
+        self.assertEqual(video.title, "Tips & Tricks for GATE '26")
+        self.assertEqual(video.channel_title, "Physics & Maths")
+
     def test_items_without_a_video_id_are_skipped(self):
         payload = {"items": [{"id": {}, "snippet": {"title": "Broken"}}]}
         with patch.object(service.requests, "get", return_value=FakeResponse(200, payload)):
