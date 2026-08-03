@@ -95,6 +95,41 @@ Go to `/tasks`. Filter by goal, then by *Overdue*.
 
 > "Every task across every goal, in one list."
 
+## 5b. The one they'll remember — adaptive re-plan (1 minute)
+
+Still on the goal page, click **Re-plan**.
+
+> "This is the part I think matters most. A plan you made two months ago is
+> wrong by now — that's not a flaw, that's just life. So instead of making you
+> redo it, I send only the *unfinished* work back to the model with today's
+> date and the real deadline, and it redistributes what's left."
+
+When the summary comes back, read it aloud — it's written for the user, not
+about the data. Point at the milestone dates that moved.
+
+> "Completed tasks don't move. Titles don't change. Resources stay. Only dates.
+> And every id the model sends back is checked against the ids I sent it — a
+> hallucinated id can't reach the database — with dates clamped to today and to
+> their milestone regardless of what comes back."
+
+Then hit `⌘K` (or `Ctrl K`) and type a goal name.
+
+> "And the whole thing is navigable from the keyboard."
+
+## 5c. Focus and streaks (45 seconds)
+
+Open **Focus** from the sidebar. Start a 25-minute session against a task, then
+stop it after a few seconds.
+
+> "Stopping early still banks the time — I didn't want a tool that punishes you
+> for being honest about a bad session. Anything under a minute is treated as a
+> mis-click and ignored."
+
+Point at the streak and the activity heatmap.
+
+> "A day counts if you finish a task or log a session. Missing today doesn't
+> break the streak — the day isn't over."
+
 ## 6. Analytics (30 seconds)
 
 Open `/analytics`.
@@ -138,3 +173,17 @@ Derived values drift. Computing it from task counts means it's always right.
 **"Why no background job queue?"**
 Generation takes a few seconds and the user is actively waiting for it. Celery
 and Redis would add two moving parts to deploy for no benefit at this scale.
+The notification feed is derived on request rather than pushed, which is the
+other place a queue would normally appear.
+
+**"What stops the AI corrupting the plan when it re-plans?"**
+It never gets write access. It returns ids and dates; the server accepts an id
+only if it was in the payload it sent, confirms the task belongs to that
+milestone, and clamps every date to today and to the milestone's target. There
+are tests for each of those three cases, including a deliberately hallucinated
+id.
+
+**"How is the streak calculated?"**
+From completion timestamps and focus sessions, bucketed into local dates in
+Python so SQLite and PostgreSQL agree across timezone boundaries. An idle today
+doesn't break it; a genuinely missed day does.

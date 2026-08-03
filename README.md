@@ -14,13 +14,47 @@ Built as a final-year engineering project.
 
 | Screen | What's there |
 |---|---|
-| `/dashboard` | Today's tasks, overdue items, next 7 days, goal progress cards |
+| `/dashboard` | Streak + focus strip, today's tasks, overdue, next 7 days, goal progress, **Plan my day** |
 | `/goals` | Every goal as a progress card |
 | `/goals/new` | Natural language → AI roadmap → **editable preview** → save |
-| `/goals/:id` | Full roadmap: milestones, nested tasks, learning resources, documents |
+| `/goals/:id` | Full roadmap: milestones, nested tasks, learning resources, documents, **Re-plan** |
 | `/tasks` | Cross-goal task list, filterable by goal / status / due date |
+| `/focus` | Pomodoro timer bound to a task, session history, streak + activity heatmap |
 | `/analytics` | Overall completion, upcoming workload, per-goal progress |
 | `/calendar` | A week-list of tasks grouped by day |
+
+Plus a **command palette** on `⌘K` / `Ctrl K` (or `/`) for search and navigation,
+an **alerts centre** in the top bar, and **dark mode**.
+
+### Adaptive re-planning
+
+The feature the rest of the app is built around. When a goal falls behind,
+**Re-plan** sends only the *unfinished* work to the model and asks it to
+redistribute it across the time that's actually left. Completed tasks, titles,
+edits and learning resources are untouched — only dates move.
+
+Every id the model returns is checked against the ids that were sent, so a
+hallucinated id can never reach the database, and dates are clamped to today
+and to their parent milestone regardless of what comes back.
+
+### Plan my day
+
+Tell it how long you have; it picks an ordered subset of tasks from across
+every goal that genuinely fits, with a one-line reason each. You can tick them
+off or start a focus session on one without leaving the dialog.
+
+### Momentum
+
+A day counts when you complete a task or log a focus session of at least a
+minute. Streaks tolerate an idle *today* — the day isn't over yet — but break
+on a genuinely missed day. Activity days are bucketed in Python rather than
+SQL so SQLite and PostgreSQL agree on timezone boundaries.
+
+### Alerts
+
+Derived on request, never stored, so an alert can't go stale and no job queue
+is needed: overdue tasks, late milestones, goals behind their expected pace
+(elapsed time vs. actual progress), stale goals, and a streak about to lapse.
 
 **Roadmap generation** sends the goal to a Gemini Flash model at low temperature
 with a JSON-only prompt and one few-shot example, then validates the response
@@ -149,10 +183,11 @@ search link, plus a note explaining that videos are unavailable.
 .venv\Scripts\python.exe backend/manage.py test
 ```
 
-123 tests covering auth and JWT issuing, roadmap schema validation, LLM JSON
+178 tests covering auth and JWT issuing, roadmap schema validation, LLM JSON
 parsing and retry behaviour, resource discovery and its fallbacks, every API
-endpoint and filter, progress calculation, and per-user data isolation on every
-resource.
+endpoint and filter, progress calculation, streak and heatmap logic, alert
+derivation, re-planning (including hallucinated-id rejection and date
+clamping), daily planning, and per-user data isolation on every resource.
 
 The suite needs no running server, no API keys and no network — the Gemini and
 YouTube calls are mocked at the transport boundary, and uploads go to a
@@ -178,8 +213,14 @@ All endpoints require `Authorization: Bearer <access>` except register/login.
 | `POST` | `/api/milestones/reorder/` | Bulk reorder |
 | `GET` | `/api/tasks/` | Cross-goal tasks — `?goal=&status=&due=` |
 | `POST` | `/api/tasks/{id}/breakdown/` | Split a task into 2–4 subtasks |
+| `POST` | `/api/goals/{id}/replan/` | Reschedule the unfinished part of a roadmap |
+| `POST` | `/api/plan-my-day/` | Pick today's workload for a time budget |
 | `GET` | `/api/dashboard/` | Everything the dashboard needs, in one call |
 | `GET` | `/api/analytics/overview/` | Chart-ready aggregates |
+| `GET/POST` | `/api/focus-sessions/` | Start and list focus sessions |
+| `POST` | `/api/focus-sessions/{id}/finish/` | Close a session with time actually spent |
+| `GET` | `/api/momentum/` | Streaks, focus totals and the activity heatmap |
+| `GET` | `/api/alerts/` | Derived notification feed |
 | `GET/POST/DELETE` | `/api/documents/` | Document vault |
 
 `generate/` returns a preview *without* writing to the database — the frontend
