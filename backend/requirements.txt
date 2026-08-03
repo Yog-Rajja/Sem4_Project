@@ -7,3 +7,6 @@ requests==2.32.3
 # Pure-Python PDF text extraction. Scanned pages fall through to Gemini's
 # multimodal reading instead, so there is no OCR engine to install.
 pypdf==5.1.0
+# Web push notifications. Talks to the browser's own push service, so there is
+# no third-party notification account involved.
+pywebpush==2.0.0
