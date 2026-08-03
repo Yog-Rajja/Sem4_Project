@@ -153,10 +153,34 @@ CORS_ALLOWED_ORIGINS = [
 # --- AI / external services ----------------------------------------------
 # Provider is swappable: see apps/goals/services/llm.py
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
+
+# NOTE: Groq and Grok are different companies.
+#   groq → api.groq.com, fast inference of open models
+#   xai  → api.x.ai, Grok
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+XAI_API_KEY = os.getenv("XAI_API_KEY", "").strip()
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
+
+# Tried in order; a model that is exhausted (429), retired (404) or overloaded
+# (503) falls through to the next. Entries with no API key are skipped, so
+# listing providers you haven't signed up for costs nothing.
+LLM_FALLBACK_CHAIN = os.getenv(
+    "LLM_FALLBACK_CHAIN",
+    ",".join(
+        [
+            "gemini:gemini-3.5-flash",
+            "gemini:gemini-flash-latest",
+            "gemini:gemini-3.5-flash-lite",
+            "gemini:gemini-flash-lite-latest",
+            "gemini:gemini-3.1-flash-lite",
+            "groq:llama-3.3-70b-versatile",
+            "openrouter:meta-llama/llama-3.3-70b-instruct:free",
+            "xai:grok-3-mini",
+        ]
+    ),
+).strip()
 
 # Image generation is a separate, paid-tier model on Gemini. See
 # apps/studio/services/imagegen.py.

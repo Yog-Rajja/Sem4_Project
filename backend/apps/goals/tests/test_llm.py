@@ -35,6 +35,11 @@ class ExtractJsonTests(SimpleTestCase):
             llm.extract_json("I cannot help with that.")
 
 
+@override_settings(
+    LLM_FALLBACK_CHAIN="gemini:test-model",
+    GEMINI_API_KEY="test-key",
+    GROQ_API_KEY="", XAI_API_KEY="", OPENROUTER_API_KEY="",
+)
 class CompleteJsonRetryTests(SimpleTestCase):
     def test_retries_once_then_succeeds(self):
         with patch.object(
@@ -61,7 +66,9 @@ class CompleteJsonRetryTests(SimpleTestCase):
         self.assertIn("manually", ctx.exception.detail)
 
 
-@override_settings(LLM_PROVIDER="gemini", GEMINI_API_KEY="")
+@override_settings(
+    GEMINI_API_KEY="", GROQ_API_KEY="", XAI_API_KEY="", OPENROUTER_API_KEY=""
+)
 class ProviderConfigTests(SimpleTestCase):
     def test_missing_api_key_is_reported_as_configuration_error(self):
         with self.assertRaises(ServiceError) as ctx:
@@ -69,15 +76,24 @@ class ProviderConfigTests(SimpleTestCase):
         self.assertEqual(ctx.exception.code, "llm_not_configured")
         self.assertEqual(ctx.exception.status_code, 503)
 
-    @override_settings(LLM_PROVIDER="nonsense")
-    def test_unknown_provider_is_reported(self):
+    @override_settings(LLM_FALLBACK_CHAIN="nonsense:whatever")
+    def test_an_unknown_provider_leaves_nothing_usable(self):
+        """Unknown providers are dropped when the chain is parsed, so this
+        surfaces as "nothing configured" rather than a separate error."""
         with self.assertRaises(ServiceError) as ctx:
             llm.complete_text("sys", "user")
-        self.assertEqual(ctx.exception.code, "llm_misconfigured")
+        self.assertEqual(ctx.exception.code, "llm_not_configured")
 
 
-@override_settings(LLM_PROVIDER="gemini", GEMINI_API_KEY="test-key")
+@override_settings(
+    LLM_FALLBACK_CHAIN="gemini:test-model",
+    GEMINI_API_KEY="test-key",
+    GROQ_API_KEY="", XAI_API_KEY="", OPENROUTER_API_KEY="",
+)
 class GeminiTransportTests(SimpleTestCase):
+    """A single-entry chain, so upstream failures surface directly rather than
+    being masked by a fallback."""
+
     def _response(self, status, payload):
         class FakeResponse:
             status_code = status
@@ -93,21 +109,18 @@ class GeminiTransportTests(SimpleTestCase):
         with patch.object(llm.requests, "post", return_value=self._response(200, payload)):
             self.assertEqual(llm.complete_text("sys", "user"), '{"a": 1}')
 
-    def test_quota_refusal_points_at_the_model_not_just_the_clock(self):
-        """Google returns 429 with limit:0 when the model has no free-tier
-        allocation, so "wait and retry" alone would be misleading advice."""
+    def test_a_quota_refusal_exhausts_the_chain(self):
         with patch.object(llm.requests, "post", return_value=self._response(429, {})):
             with self.assertRaises(ServiceError) as ctx:
                 llm.complete_text("sys", "user")
-        detail = ctx.exception.detail.lower()
-        self.assertIn("quota", detail)
-        self.assertIn("gemini_model", detail)
+        self.assertEqual(ctx.exception.code, "llm_all_exhausted")
+        self.assertIn("quota", ctx.exception.detail.lower())
 
-    def test_bad_key_gets_a_human_message(self):
+    def test_a_rejected_key_exhausts_the_chain(self):
         with patch.object(llm.requests, "post", return_value=self._response(403, {})):
             with self.assertRaises(ServiceError) as ctx:
                 llm.complete_text("sys", "user")
-        self.assertIn("key", ctx.exception.detail.lower())
+        self.assertEqual(ctx.exception.code, "llm_all_exhausted")
 
     def test_empty_candidate_list_is_handled(self):
         with patch.object(
@@ -115,11 +128,22 @@ class GeminiTransportTests(SimpleTestCase):
         ):
             with self.assertRaises(ServiceError) as ctx:
                 llm.complete_text("sys", "user")
-        self.assertEqual(ctx.exception.code, "llm_empty_response")
+        self.assertEqual(ctx.exception.code, "llm_all_exhausted")
 
-    def test_timeout_is_translated(self):
+    def test_a_timeout_exhausts_a_single_entry_chain(self):
         with patch.object(llm.requests, "post", side_effect=llm.requests.Timeout()):
             with self.assertRaises(ServiceError) as ctx:
                 llm.complete_text("sys", "user")
-        self.assertEqual(ctx.exception.code, "llm_timeout")
-        self.assertEqual(ctx.exception.status_code, 504)
+        self.assertEqual(ctx.exception.code, "llm_all_exhausted")
+
+    def test_attachments_are_sent_as_inline_data(self):
+        payload = {"candidates": [{"content": {"parts": [{"text": "{}"}]}}]}
+        with patch.object(
+            llm.requests, "post", return_value=self._response(200, payload)
+        ) as posted:
+            llm.complete_text(
+                "sys", "user",
+                attachments=[{"mime_type": "application/pdf", "data": "BASE64"}],
+            )
+        parts = posted.call_args.kwargs["json"]["contents"][0]["parts"]
+        self.assertEqual(parts[1]["inline_data"]["mime_type"], "application/pdf")
