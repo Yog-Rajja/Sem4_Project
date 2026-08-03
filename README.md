@@ -72,6 +72,7 @@ copy backend\.env.example backend\.env
 | Variable | Where to get it |
 |---|---|
 | `GEMINI_API_KEY` | <https://aistudio.google.com/apikey> — free tier |
+| `GEMINI_MODEL` | Defaults to `gemini-3.6-flash` — see the note below |
 | `YOUTUBE_API_KEY` | Google Cloud console → enable *YouTube Data API v3* → create an API key |
 | `DJANGO_SECRET_KEY` | Any long random string |
 
@@ -103,6 +104,16 @@ npm run dev
 ```
 
 Open <http://localhost:5173>, register an account, and create your first goal.
+
+### If generation fails with a quota error
+
+A newly created API key gets **no free-tier allocation** for the `gemini-2.0-*`
+family — the API returns `429` with `limit: 0`, which looks like a rate limit
+but is not one and never resolves by waiting. `gemini-2.5-flash` separately
+returns `404` ("no longer available to new users").
+
+`gemini-3.6-flash` works on a fresh free key and is the default here.
+`verify_ai` will tell you if that changes.
 
 ### Checking your keys actually work
 
