@@ -24,7 +24,7 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 # --- Providers ------------------------------------------------------------
 # Each provider function has the same shape: (system, user, temperature) -> raw text.
 
-def _call_gemini(system: str, user: str, temperature: float) -> str:
+def _call_gemini(system: str, user: str, temperature: float, attachments=None) -> str:
     if not settings.GEMINI_API_KEY:
         raise ServiceError(
             "No Gemini API key configured. Add GEMINI_API_KEY to backend/.env, "
@@ -33,13 +33,27 @@ def _call_gemini(system: str, user: str, temperature: float) -> str:
             code="llm_not_configured",
         )
 
+    # Gemini is multimodal, so a PDF or a photo of a page goes straight to the
+    # model as inline data — no separate OCR engine, and it reads layout rather
+    # than just characters.
+    parts = [{"text": user}]
+    for attachment in attachments or []:
+        parts.append(
+            {
+                "inline_data": {
+                    "mime_type": attachment["mime_type"],
+                    "data": attachment["data"],
+                }
+            }
+        )
+
     payload = {
         "system_instruction": {"parts": [{"text": system}]},
-        "contents": [{"role": "user", "parts": [{"text": user}]}],
+        "contents": [{"role": "user", "parts": parts}],
         "generationConfig": {
             "temperature": temperature,
             "responseMimeType": "application/json",
-            "maxOutputTokens": 4096,
+            "maxOutputTokens": 8192,
         },
     }
     resp = requests.post(
@@ -69,7 +83,14 @@ def _call_gemini(system: str, user: str, temperature: float) -> str:
         )
 
 
-def _call_groq(system: str, user: str, temperature: float) -> str:
+def _call_groq(system: str, user: str, temperature: float, attachments=None) -> str:
+    if attachments:
+        raise ServiceError(
+            "The Groq provider cannot read attachments. Set LLM_PROVIDER=gemini "
+            "to analyse documents.",
+            status_code=400,
+            code="attachments_unsupported",
+        )
     if not settings.GROQ_API_KEY:
         raise ServiceError(
             "No Groq API key configured. Add GROQ_API_KEY to backend/.env.",
@@ -124,7 +145,8 @@ def _friendly_http_message(provider: str, status: int) -> str:
 
 # --- Public API -----------------------------------------------------------
 
-def complete_text(system: str, user: str, temperature: float = 0.2) -> str:
+def complete_text(system: str, user: str, temperature: float = 0.2, attachments=None) -> str:
+    """`attachments` is a list of {"mime_type", "data"} where data is base64."""
     provider = _PROVIDERS.get(settings.LLM_PROVIDER)
     if provider is None:
         raise ServiceError(
@@ -134,7 +156,7 @@ def complete_text(system: str, user: str, temperature: float = 0.2) -> str:
             code="llm_misconfigured",
         )
     try:
-        return provider(system, user, temperature)
+        return provider(system, user, temperature, attachments)
     except requests.Timeout:
         raise ServiceError(
             "The AI took too long to respond. Please try again.",
@@ -175,11 +197,13 @@ def extract_json(raw: str):
     raise ValueError("no JSON object found in model output")
 
 
-def complete_json(system: str, user: str, temperature: float = 0.2, retries: int = 1):
+def complete_json(
+    system: str, user: str, temperature: float = 0.2, retries: int = 1, attachments=None
+):
     """Call the model and return parsed JSON, retrying once on a parse failure."""
     last_error = None
     for attempt in range(retries + 1):
-        raw = complete_text(system, user, temperature)
+        raw = complete_text(system, user, temperature, attachments)
         try:
             return extract_json(raw)
         except (ValueError, json.JSONDecodeError) as exc:
