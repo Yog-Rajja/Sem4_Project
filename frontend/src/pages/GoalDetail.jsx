@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import PageShell from '../components/layout/PageShell'
 import MilestoneCard from '../components/goals/MilestoneCard'
 import DocumentVault from '../components/vault/DocumentVault'
+import ReplanDialog from '../components/goals/ReplanDialog'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -14,7 +15,7 @@ import InlineEdit from '../components/ui/InlineEdit'
 import ProgressBar from '../components/ui/ProgressBar'
 import Spinner from '../components/ui/Spinner'
 import { useToast } from '../components/ui/Toast'
-import { PlusIcon, TargetIcon, TrashIcon } from '../components/ui/Icons'
+import { PlusIcon, TargetIcon, TrashIcon, WandIcon } from '../components/ui/Icons'
 import api, { errorMessage } from '../lib/api'
 import { formatDate } from '../lib/format'
 
@@ -31,6 +32,7 @@ export default function GoalDetail() {
   const [breakingDownTaskId, setBreakingDownTaskId] = useState(null)
   const [confirm, setConfirm] = useState(null) // {kind, target}
   const [confirmBusy, setConfirmBusy] = useState(false)
+  const [replanOpen, setReplanOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -375,6 +377,10 @@ export default function GoalDetail() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => setReplanOpen(true)}>
+              <WandIcon size={15} />
+              Re-plan
+            </Button>
             <Button variant="secondary" size="sm" onClick={addMilestone}>
               <PlusIcon size={15} />
               Add milestone
@@ -452,6 +458,16 @@ export default function GoalDetail() {
       )}
 
       <DocumentVault goalId={goal.id} />
+
+      <ReplanDialog
+        open={replanOpen}
+        onClose={() => setReplanOpen(false)}
+        goal={goal}
+        onReplanned={(updated) => {
+          setGoal(updated)
+          toast.success('Roadmap rescheduled.')
+        }}
+      />
 
       <ConfirmDialog
         open={Boolean(confirm)}

@@ -11,7 +11,9 @@ import EmptyState from '../components/ui/EmptyState'
 import ErrorState from '../components/ui/ErrorState'
 import Spinner from '../components/ui/Spinner'
 import { useToast } from '../components/ui/Toast'
-import { PlusIcon, TargetIcon } from '../components/ui/Icons'
+import PlanMyDay from '../components/dashboard/PlanMyDay'
+import MomentumStrip from '../components/dashboard/MomentumStrip'
+import { PlusIcon, TargetIcon, WandIcon } from '../components/ui/Icons'
 import { useAuth } from '../context/AuthContext'
 import api, { errorMessage } from '../lib/api'
 
@@ -30,6 +32,10 @@ export default function Dashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // The command palette deep-links here with ?plan=1 to open the planner.
+  const [planOpen, setPlanOpen] = useState(
+    () => new URLSearchParams(window.location.search).get('plan') === '1',
+  )
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -100,10 +106,18 @@ export default function Dashboard() {
           : 'Set your first goal and we will build the plan around it.'
       }
       actions={
-        <Button onClick={() => navigate('/goals/new')}>
-          <PlusIcon size={15} />
-          New goal
-        </Button>
+        <>
+          {hasGoals && (
+            <Button variant="secondary" onClick={() => setPlanOpen(true)}>
+              <WandIcon size={15} />
+              Plan my day
+            </Button>
+          )}
+          <Button onClick={() => navigate('/goals/new')}>
+            <PlusIcon size={15} />
+            New goal
+          </Button>
+        </>
       }
     >
       {!hasGoals ? (
@@ -123,6 +137,8 @@ export default function Dashboard() {
         </Card>
       ) : (
         <div className="space-y-4">
+          <MomentumStrip />
+
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatTile label="Active goals" value={stats.total_goals} index={0} />
             <StatTile label="Due today" value={stats.due_today} tone="brand" index={1} />
@@ -166,6 +182,12 @@ export default function Dashboard() {
           </Card>
         </div>
       )}
+
+      <PlanMyDay
+        open={planOpen}
+        onClose={() => setPlanOpen(false)}
+        onTaskCompleted={load}
+      />
     </PageShell>
   )
 }
