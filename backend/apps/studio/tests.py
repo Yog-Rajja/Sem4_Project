@@ -277,10 +277,13 @@ class ArtifactAPITests(AuthenticatedAPITestCase):
     def test_kinds_endpoint_lists_what_the_studio_can_make(self):
         response = self.client.get("/api/artifacts/kinds/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), len(schemas.SCHEMAS))
+        # Prompt-driven kinds, plus the certificate listed as automatic-only
+        # (see tests_certificate.py for that entry).
+        self.assertEqual(len(response.data), len(schemas.SCHEMAS) + 1)
         by_kind = {row["kind"]: row for row in response.data}
         self.assertEqual(by_kind["resume"]["export_format"], "pdf")
         self.assertEqual(by_kind["timetable"]["export_format"], "png")
+        self.assertFalse(by_kind["resume"]["automatic"])
 
     def test_another_user_sees_nothing(self):
         self.client.post(self.url, {"prompt": "Make me a resume please"}, format="json")

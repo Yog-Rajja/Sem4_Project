@@ -63,6 +63,17 @@ class GenerateArtifactSerializer(serializers.Serializer):
             )
         return value.strip()
 
+    def validate_kind(self, value):
+        if value == Artifact.Kind.CERTIFICATE:
+            # A certificate's facts are computed from a finished goal, not
+            # written from a prompt — invented via POST /goals/{id}/certificate/
+            # instead, where the numbers can't be hallucinated.
+            raise serializers.ValidationError(
+                "Certificates are generated automatically once a goal is "
+                "complete, not from a prompt."
+            )
+        return value
+
     def validate_goal(self, goal):
         request = self.context.get("request")
         if goal and request and goal.user_id != request.user.id:

@@ -2,10 +2,14 @@ import base64
 
 from django.conf import settings
 from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from apps.goals.models import Goal
+from apps.studio.services import certificate as certificate_service
 from apps.studio.services import imagegen
 from apps.studio.services.generate import generate_artifact
 from apps.studio.services.schemas import SCHEMAS
@@ -60,16 +64,27 @@ class ArtifactViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], url_path="kinds")
     def kinds(self, request):
         """What the studio can produce, and how each one exports."""
-        return Response(
-            [
-                {
-                    "kind": kind,
-                    "label": spec["label"],
-                    "export_format": "pdf" if kind in Artifact.PDF_KINDS else "png",
-                }
-                for kind, spec in SCHEMAS.items()
-            ]
-        )
+        prompt_driven = [
+            {
+                "kind": kind,
+                "label": spec["label"],
+                "export_format": "pdf" if kind in Artifact.PDF_KINDS else "png",
+                "automatic": False,
+            }
+            for kind, spec in SCHEMAS.items()
+        ]
+        # Certificates are never generated from a prompt — kept out of SCHEMAS
+        # entirely so an explicit kind='certificate' can't reach the freeform
+        # generation path — but still worth listing for discoverability.
+        automatic = [
+            {
+                "kind": Artifact.Kind.CERTIFICATE,
+                "label": "Certificate of completion",
+                "export_format": "png",
+                "automatic": True,
+            }
+        ]
+        return Response(prompt_driven + automatic)
 
     @action(detail=False, methods=["post"], url_path="generate")
     def generate(self, request):
@@ -146,3 +161,52 @@ class ArtifactViewSet(viewsets.ModelViewSet):
         return Response(
             ArtifactSerializer(artifact, context={"request": request}).data
         )
+
+
+class GoalCertificateView(APIView):
+    """Generate, refresh, or fetch the completion certificate for a goal.
+
+    Lives in studio rather than goals — studio already depends on goals for
+    the Artifact.goal FK, and keeping that dependency one-directional avoids
+    a circular import between the two apps.
+    """
+
+    def get(self, request, goal_id):
+        goal = get_object_or_404(Goal, pk=goal_id, user=request.user)
+        artifact = Artifact.objects.filter(
+            user=request.user, goal=goal, kind=Artifact.Kind.CERTIFICATE
+        ).first()
+        if artifact is None:
+            return Response(
+                {"detail": "No certificate yet.", "code": "no_certificate"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(ArtifactSerializer(artifact, context={"request": request}).data)
+
+    def post(self, request, goal_id):
+        goal = get_object_or_404(Goal, pk=goal_id, user=request.user)
+        total, done = goal.task_counts()
+        if not total or done < total:
+            return Response(
+                {
+                    "detail": "This goal isn't finished yet — every task needs "
+                    "to be complete first.",
+                    "code": "goal_not_complete",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        data = certificate_service.build_certificate(goal, request.user)
+        # Upsert on (user, goal, kind) rather than creating a new row each
+        # time, so refreshing a certificate never leaves duplicates behind.
+        artifact, _created = Artifact.objects.update_or_create(
+            user=request.user,
+            goal=goal,
+            kind=Artifact.Kind.CERTIFICATE,
+            defaults={
+                "title": f"{goal.title} — Certificate of Completion",
+                "prompt": "",
+                "data": data,
+            },
+        )
+        return Response(ArtifactSerializer(artifact, context={"request": request}).data)

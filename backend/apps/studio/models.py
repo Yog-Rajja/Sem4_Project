@@ -20,6 +20,7 @@ class Artifact(models.Model):
         PROJECT_REPORT = "project_report", "Project report"
         INVITATION = "invitation", "Invitation card"
         IMAGE = "image", "Generated image"
+        CERTIFICATE = "certificate", "Certificate of completion"
 
     # Text documents export as vector PDF; visual ones export as PNG.
     PDF_KINDS = {Kind.RESUME, Kind.COVER_LETTER, Kind.PROJECT_REPORT}
