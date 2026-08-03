@@ -20,6 +20,8 @@ Built as a final-year engineering project.
 | `/goals/:id` | Full roadmap: milestones, nested tasks, learning resources, documents, **Re-plan** |
 | `/tasks` | Cross-goal task list, filterable by goal / status / due date |
 | `/focus` | Pomodoro timer bound to a task, session history, streak + activity heatmap |
+| `/studio` | Describe a document → AI builds it → download as PDF or PNG |
+| `/r/:token` | Public read-only roadmap (no account needed) |
 | `/analytics` | Overall completion, upcoming workload, per-goal progress |
 | `/calendar` | A week-list of tasks grouped by day |
 
@@ -49,6 +51,65 @@ A day counts when you complete a task or log a focus session of at least a
 minute. Streaks tolerate an idle *today* — the day isn't over yet — but break
 on a genuinely missed day. Activity days are bucketed in Python rather than
 SQL so SQLite and PostgreSQL agree on timezone boundaries.
+
+### AI Studio
+
+Describe what you need and the studio works out *what it is* before building
+it. Five document types today — résumé, diet plan, study timetable, cover
+letter, project report — behind **one engine**: each type is a JSON shape,
+prompt guidance and a validator, so adding a sixth is a registry entry rather
+than a new feature.
+
+Intent is classified by weighted keywords first, so "make me a resume" never
+costs an API call; only genuinely ambiguous prompts fall through to the model.
+
+**Export formats are chosen to match the document, not for convenience.** Text
+documents render through `@react-pdf/renderer` as **vector PDFs with selectable
+text** — which is what lets an applicant tracking system actually read a CV.
+The common shortcut of rasterising HTML to an image would produce a résumé that
+ATS software scores as blank. Visual documents (diet plans, timetables) export
+as PNG via `html-to-image`, since those get shared in a chat rather than parsed.
+
+The résumé follows an **Oxford-style academic CV**: centred name with
+letter-spacing, a single contact line, section headings in spaced capitals over
+a hairline rule, and a narrow left-hand date column against the content. Set in
+Times-Roman, one of the PDF standard-14 faces, so nothing is embedded and no
+font is fetched at runtime.
+
+The account's own name and email are passed in as known facts — otherwise a
+generated CV comes out addressed to "Your Name", because the prompt forbids
+inventing personal details.
+
+### Document intelligence
+
+Upload a PDF, photo or text file to a goal, then have it read.
+
+Text-bearing PDFs are extracted locally with **pypdf** — free, exact, no API
+call. Only scanned pages and photographs fall through to Gemini's multimodal
+reading, which means **there is no OCR engine to install**. Where both are
+available the local text wins, since a model's transcription can drift.
+
+You get a document type, a summary, key points and suggested actions — and then
+**"Turn into a roadmap"**, which feeds the extracted text to the roadmap
+generator so the milestones follow what the document actually says. Upload a
+syllabus, get a revision plan whose milestones are its units.
+
+Analysis is explicit rather than automatic on upload, because reading costs one
+of the day's requests.
+
+### Sharing
+
+Any roadmap can be published to a read-only page at `/r/<token>`. This is the
+only unauthenticated endpoint in the project: the token is an unguessable
+UUID, the serializer exposes the plan but no ids, email or raw input, and
+turning sharing off 404s the link immediately.
+
+### Weekly review
+
+A Monday retrospective. The figures are computed server-side and handed to the
+model as facts — the model only writes the prose — so a review can never claim
+you finished more than you did. Cached per week so opening the dashboard
+doesn't regenerate it. A quiet week is allowed to read as a quiet week.
 
 ### Alerts
 
@@ -139,15 +200,26 @@ npm run dev
 
 Open <http://localhost:5173>, register an account, and create your first goal.
 
-### If generation fails with a quota error
+### Free-tier limits — read this before demoing
 
-A newly created API key gets **no free-tier allocation** for the `gemini-2.0-*`
-family — the API returns `429` with `limit: 0`, which looks like a rate limit
-but is not one and never resolves by waiting. `gemini-2.5-flash` separately
+The Gemini free tier allows **20 generate requests per day, counted per
+model**. That is the single most important operational fact about this
+project. A demo that generates a roadmap, re-plans it, plans a day, reads a
+document and builds two studio documents has already spent six.
+
+Two things follow:
+
+- **The allowance is per model.** If you exhaust one, change `GEMINI_MODEL` in
+  `backend/.env` to another Flash model and you get a fresh 20. Verified
+  working: `gemini-3.5-flash`, `gemini-3.6-flash`, `gemini-flash-latest`,
+  `gemini-3.5-flash-lite`, `gemini-flash-lite-latest`, `gemini-3.1-flash-lite`.
+- **Don't burn the allowance the morning of a demo.** `verify_ai` uses two
+  requests by default (four with `--all`).
+
+Separately: a newly created key gets **no** free-tier allocation for the
+`gemini-2.0-*` family — the API returns `429` with `limit: 0`, which looks
+like a rate limit but never resolves by waiting — and `gemini-2.5-flash`
 returns `404` ("no longer available to new users").
-
-`gemini-3.6-flash` works on a fresh free key and is the default here.
-`verify_ai` will tell you if that changes.
 
 ### Checking your keys actually work
 
@@ -183,11 +255,13 @@ search link, plus a note explaining that videos are unavailable.
 .venv\Scripts\python.exe backend/manage.py test
 ```
 
-178 tests covering auth and JWT issuing, roadmap schema validation, LLM JSON
+242 tests covering auth and JWT issuing, roadmap schema validation, LLM JSON
 parsing and retry behaviour, resource discovery and its fallbacks, every API
 endpoint and filter, progress calculation, streak and heatmap logic, alert
 derivation, re-planning (including hallucinated-id rejection and date
-clamping), daily planning, and per-user data isolation on every resource.
+clamping), daily planning, studio intent classification and schema coercion,
+document preparation across file types, weekly-review aggregation, share-link
+privacy, and per-user data isolation on every resource.
 
 The suite needs no running server, no API keys and no network — the Gemini and
 YouTube calls are mocked at the transport boundary, and uploads go to a
@@ -221,7 +295,15 @@ All endpoints require `Authorization: Bearer <access>` except register/login.
 | `POST` | `/api/focus-sessions/{id}/finish/` | Close a session with time actually spent |
 | `GET` | `/api/momentum/` | Streaks, focus totals and the activity heatmap |
 | `GET` | `/api/alerts/` | Derived notification feed |
+| `GET/POST` | `/api/weekly-review/` | Cached retrospective · regenerate |
 | `GET/POST/DELETE` | `/api/documents/` | Document vault |
+| `POST` | `/api/documents/{id}/analyse/` | Read a document and extract meaning |
+| `POST` | `/api/documents/{id}/to-goal/` | Turn a document into a roadmap preview |
+| `GET` | `/api/artifacts/kinds/` | What the studio can build |
+| `POST` | `/api/artifacts/generate/` | Prompt → generated document |
+| `POST` | `/api/artifacts/{id}/regenerate/` | Rebuild, optionally with an instruction |
+| `POST` | `/api/goals/{id}/share/` | Turn public sharing on or off |
+| `GET` | `/api/public/roadmap/{token}/` | **Unauthenticated** read-only roadmap |
 
 `generate/` returns a preview *without* writing to the database — the frontend
 lets you edit it and POSTs the result to `/api/goals/`, so an abandoned

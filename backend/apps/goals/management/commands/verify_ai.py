@@ -33,6 +33,12 @@ SAMPLE_GOALS = [
     ("Save 2 lakh rupees for a bike in 10 months", 300),
 ]
 
+# The free tier allows only 20 generate requests per day per model, so the
+# default run checks the two most dissimilar goals (exam prep, and a savings
+# goal with nothing to "learn") rather than spending a fifth of the day's
+# allowance. Use --all before a demo, when it matters more.
+QUICK_GOALS = [SAMPLE_GOALS[0], SAMPLE_GOALS[3]]
+
 OK = "  [ok]   "
 WARN = "  [warn] "
 BAD = "  [FAIL] "
@@ -43,6 +49,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--goal", help="Check a single goal instead of the samples.")
+        parser.add_argument(
+            "--all",
+            action="store_true",
+            dest="run_all",
+            help="Check all four sample goals instead of the usual two.",
+        )
         parser.add_argument(
             "--skip-youtube", action="store_true", help="Skip the resource lookup."
         )
@@ -98,8 +110,14 @@ class Command(BaseCommand):
             fatal=False,
         )
 
-        goals = (
-            [(options["goal"], 180)] if options.get("goal") else SAMPLE_GOALS
+        if options.get("goal"):
+            goals = [(options["goal"], 180)]
+        else:
+            goals = SAMPLE_GOALS if options.get("run_all") else QUICK_GOALS
+
+        self.stdout.write(
+            f"  Will use {len(goals)} of today's 20 free generate requests "
+            f"for this model."
         )
         first_query = None
 
