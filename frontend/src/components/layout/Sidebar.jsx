@@ -8,6 +8,7 @@ import {
   CompassIcon,
   HomeIcon,
   TargetIcon,
+  TimerIcon,
   XIcon,
 } from '../ui/Icons'
 
@@ -15,6 +16,7 @@ const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
   { to: '/goals', label: 'Goals', icon: TargetIcon },
   { to: '/tasks', label: 'Tasks', icon: CheckSquareIcon },
+  { to: '/focus', label: 'Focus', icon: TimerIcon },
   { to: '/calendar', label: 'Calendar', icon: CalendarIcon },
   { to: '/analytics', label: 'Analytics', icon: ChartIcon },
 ]
