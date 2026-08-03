@@ -302,10 +302,6 @@ def send_email(user, digest: dict) -> bool:
         logger.info("No email address for %s; skipping", user)
         return False
 
-    if not settings.EMAIL_HOST_USER and settings.EMAIL_BACKEND.endswith("smtp.EmailBackend"):
-        logger.info("SMTP not configured; skipping email")
-        return False
-
     text, html = _email_bodies(user, digest)
     message = EmailMultiAlternatives(
         subject=f"{digest['title']} — Smart Companion",

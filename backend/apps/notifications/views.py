@@ -13,12 +13,20 @@ class NotificationSettingView(APIView):
 
     def get(self, request):
         setting, _ = NotificationSetting.objects.get_or_create(user=request.user)
+
+        # "console" means mail is printed to the server log rather than sent.
+        # Reporting that honestly matters: the previous version said email was
+        # supported either way, so a digest that never arrived looked like a bug
+        # rather than missing credentials.
+        sending = settings.EMAIL_BACKEND.endswith("smtp.EmailBackend")
+
         return Response(
             {
                 **NotificationSettingSerializer(setting).data,
                 "push_supported": services.push_configured(),
-                "email_supported": bool(settings.EMAIL_HOST_USER)
-                or not settings.EMAIL_BACKEND.endswith("smtp.EmailBackend"),
+                "email_mode": "smtp" if sending else "console",
+                "email_supported": sending,
+                "email_from": settings.DEFAULT_FROM_EMAIL if sending else "",
                 "vapid_public_key": settings.VAPID_PUBLIC_KEY,
                 "devices": PushSubscription.objects.filter(user=request.user).count(),
             }

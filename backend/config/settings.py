@@ -184,14 +184,24 @@ VAPID_CONTACT_EMAIL = os.getenv("VAPID_CONTACT_EMAIL", "admin@example.com")
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
+
+# Google displays app passwords in four spaced groups ("abcd efgh ijkl mnop").
+# Pasted verbatim those spaces make SMTP auth fail with a misleading
+# "username and password not accepted", so strip whitespace here rather than
+# making every user work it out.
+EMAIL_HOST_PASSWORD = "".join(os.getenv("EMAIL_HOST_PASSWORD", "").split())
+
 DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "Smart Companion <noreply@example.com>"
 )
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
+
+# With no mailbox configured, mail is printed to the console rather than sent —
+# so the feature is developable end to end without credentials.
 EMAIL_BACKEND = (
     "django.core.mail.backends.smtp.EmailBackend"
-    if EMAIL_HOST_USER
+    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
     else "django.core.mail.backends.console.EmailBackend"
 )
 

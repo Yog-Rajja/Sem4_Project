@@ -122,6 +122,18 @@ due today, and coming this week — then **how many are left per goal** and in
 total. Settings shows a live preview of exactly what today's message would say,
 without sending anything.
 
+If mail doesn't arrive, this names the reason rather than leaving you guessing:
+
+```bash
+.venv\Scripts\python.exe backend/manage.py check_email --to you@gmail.com
+```
+
+It distinguishes no-credentials from rejected-login from blocked-port, and
+Settings says plainly when mail is only going to the console. Note that Google
+displays app passwords in four spaced groups; the spaces are stripped
+automatically, since pasting them verbatim otherwise fails with a misleading
+"username and password not accepted".
+
 Both are **off by default** and switched on per user in **Settings**, which
 also has a *Send a test* button — otherwise there's no way to know it works
 except waiting until tomorrow.

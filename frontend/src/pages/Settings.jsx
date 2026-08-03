@@ -233,8 +233,8 @@ export default function Settings() {
             title="Email me"
             description="The same digest as an email, with every task listed and how many are left."
             warning={
-              settings && !settings.email_supported
-                ? 'No mailbox configured on the server yet. Add EMAIL_HOST_USER and EMAIL_HOST_PASSWORD to backend/.env — until then emails print to the server console instead of sending.'
+              settings?.email_mode === 'console'
+                ? 'Not actually sending yet — mail is printed to the server console. Add EMAIL_HOST_USER and EMAIL_HOST_PASSWORD to backend/.env and restart the backend. Check it with: manage.py check_email'
                 : ''
             }
           >
@@ -279,6 +279,7 @@ export default function Settings() {
                   <span className="font-medium text-ink-soft">
                     {settings.resolved_email}
                   </span>
+                  {settings.email_from && <> · sent from {settings.email_from}</>}
                 </p>
               )}
             </div>

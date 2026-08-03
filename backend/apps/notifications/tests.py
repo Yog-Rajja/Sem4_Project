@@ -143,6 +143,20 @@ class SettingsAPITests(AuthenticatedAPITestCase):
     def test_missing_keys_are_reported_rather_than_hidden(self):
         self.assertFalse(self.client.get(self.url).data["push_supported"])
 
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend")
+    def test_console_mail_is_not_reported_as_sending(self):
+        """The old version said email was supported either way, so a digest
+        that never arrived looked like a bug rather than missing credentials."""
+        response = self.client.get(self.url)
+        self.assertEqual(response.data["email_mode"], "console")
+        self.assertFalse(response.data["email_supported"])
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend")
+    def test_smtp_mail_is_reported_as_sending(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.data["email_mode"], "smtp")
+        self.assertTrue(response.data["email_supported"])
+
     def test_requires_authentication(self):
         self.client.force_authenticate(None)
         self.assertEqual(self.client.get(self.url).status_code, 401)
