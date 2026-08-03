@@ -16,6 +16,8 @@ urlpatterns = [
     path("api/", include("apps.goals.urls")),
     path("api/analytics/", include("apps.analytics.urls")),
     path("api/", include("apps.vault.urls")),
+    path("api/", include("apps.focus.urls")),
+    path("api/", include("apps.insights.urls")),
 ]
 
 if settings.DEBUG:

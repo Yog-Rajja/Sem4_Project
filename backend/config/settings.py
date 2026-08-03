@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "apps.goals",
     "apps.analytics",
     "apps.vault",
+    "apps.focus",
+    "apps.insights",
 ]
 
 MIDDLEWARE = [
