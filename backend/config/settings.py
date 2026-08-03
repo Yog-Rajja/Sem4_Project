@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.studio",
     "apps.notifications",
     "apps.skillmap",
+    "apps.circles",
 ]
 
 MIDDLEWARE = [

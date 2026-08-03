@@ -21,6 +21,7 @@ urlpatterns = [
     path("api/", include("apps.studio.urls")),
     path("api/", include("apps.notifications.urls")),
     path("api/", include("apps.skillmap.urls")),
+    path("api/", include("apps.circles.urls")),
 ]
 
 if settings.DEBUG:
