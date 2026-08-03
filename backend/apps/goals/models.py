@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Goal(models.Model):
@@ -81,6 +82,9 @@ class Task(models.Model):
     title = models.CharField(max_length=255)
     due_date = models.DateField(null=True, blank=True)
     is_complete = models.BooleanField(default=False)
+    # Stamped whenever is_complete flips on, cleared when it flips off. Streaks,
+    # velocity and the activity heatmap are all built from this.
+    completed_at = models.DateTimeField(null=True, blank=True)
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -89,6 +93,19 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        # Kept in save() rather than the serializer so the admin, the shell and
+        # bulk flows all stamp the timestamp the same way.
+        if self.is_complete and self.completed_at is None:
+            self.completed_at = timezone.now()
+        elif not self.is_complete and self.completed_at is not None:
+            self.completed_at = None
+            if kwargs.get("update_fields"):
+                kwargs["update_fields"] = set(kwargs["update_fields"]) | {"completed_at"}
+        elif self.is_complete and kwargs.get("update_fields"):
+            kwargs["update_fields"] = set(kwargs["update_fields"]) | {"completed_at"}
+        super().save(*args, **kwargs)
 
     @property
     def owner_user_id(self):
