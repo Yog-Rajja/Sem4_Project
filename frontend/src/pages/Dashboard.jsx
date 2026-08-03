@@ -13,6 +13,7 @@ import Spinner from '../components/ui/Spinner'
 import { useToast } from '../components/ui/Toast'
 import PlanMyDay from '../components/dashboard/PlanMyDay'
 import MomentumStrip from '../components/dashboard/MomentumStrip'
+import WeeklyReviewCard from '../components/dashboard/WeeklyReviewCard'
 import { PlusIcon, TargetIcon, WandIcon } from '../components/ui/Icons'
 import { useAuth } from '../context/AuthContext'
 import api, { errorMessage } from '../lib/api'
@@ -160,6 +161,8 @@ export default function Dashboard() {
             <TodayList tasks={data.today} overdue={data.overdue} onToggle={toggleTask} />
             <DeadlineList tasks={data.upcoming} onToggle={toggleTask} />
           </div>
+
+          <WeeklyReviewCard />
 
           <Card>
             <CardHeader
