@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.vault",
     "apps.focus",
     "apps.insights",
+    "apps.studio",
 ]
 
 MIDDLEWARE = [

@@ -18,6 +18,7 @@ urlpatterns = [
     path("api/", include("apps.vault.urls")),
     path("api/", include("apps.focus.urls")),
     path("api/", include("apps.insights.urls")),
+    path("api/", include("apps.studio.urls")),
 ]
 
 if settings.DEBUG:
