@@ -15,6 +15,7 @@ import NewGoal from './pages/NewGoal'
 import Tasks from './pages/Tasks'
 import Focus from './pages/Focus'
 import Calendar from './pages/Calendar'
+import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 
 // Recharts and the PDF engine are the two heaviest dependencies and each is
@@ -112,6 +113,7 @@ function AppRoutes() {
             }
           />
           <Route path="/calendar" element={<Calendar />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Public share link — deliberately outside the authenticated shell. */}

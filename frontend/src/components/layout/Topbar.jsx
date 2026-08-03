@@ -3,7 +3,15 @@ import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import Button from '../ui/Button'
 import AlertsMenu from './AlertsMenu'
-import { LogoutIcon, MenuIcon, MoonIcon, PlusIcon, SearchIcon, SunIcon } from '../ui/Icons'
+import {
+  GearIcon,
+  LogoutIcon,
+  MenuIcon,
+  MoonIcon,
+  PlusIcon,
+  SearchIcon,
+  SunIcon,
+} from '../ui/Icons'
 
 export default function Topbar({ onOpenMobileNav, onOpenCommandPalette }) {
   const { user, logout } = useAuth()
@@ -68,6 +76,16 @@ export default function Topbar({ onOpenMobileNav, onOpenCommandPalette }) {
             {user?.first_name || user?.username}
           </span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => navigate('/settings')}
+          aria-label="Settings"
+          title="Settings"
+          className="rounded-lg p-2 text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
+        >
+          <GearIcon size={17} />
+        </button>
 
         <button
           type="button"
