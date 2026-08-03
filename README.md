@@ -128,6 +128,16 @@ If mail doesn't arrive, this names the reason rather than leaving you guessing:
 .venv\Scripts\python.exe backend/manage.py check_email --to you@gmail.com
 ```
 
+And because an existing `.env` silently lacks any setting added after it was
+created — invisible until the feature quietly does nothing — this compares it
+against `.env.example` and says what each gap breaks:
+
+```bash
+.venv\Scripts\python.exe backend/manage.py check_env
+```
+
+Neither command ever prints a value.
+
 It distinguishes no-credentials from rejected-login from blocked-port, and
 Settings says plainly when mail is only going to the console. Note that Google
 displays app passwords in four spaced groups; the spaces are stripped
