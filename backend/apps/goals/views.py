@@ -14,11 +14,13 @@ from .serializers import (
     GoalDetailSerializer,
     GoalSerializer,
     MilestoneSerializer,
+    PlanDayInputSerializer,
     ReorderSerializer,
     ResourceSerializer,
     TaskListSerializer,
     TaskSerializer,
 )
+from .services import replan as replan_service
 from .services import resources as resources_service
 from .services import roadmap as roadmap_service
 
@@ -76,6 +78,47 @@ class GoalViewSet(viewsets.ModelViewSet):
                 "raw_input_text": text,
                 "target_date": target_date,
                 "milestones": milestones,
+            }
+        )
+
+
+    @action(detail=True, methods=["post"], url_path="replan")
+    def replan(self, request, pk=None):
+        """Reschedule the unfinished part of a roadmap around today's reality.
+
+        Only dates move — titles, completion history and resources are left
+        alone, so a re-plan is never destructive.
+        """
+        goal = self.get_object()
+        result = replan_service.replan_goal(goal)
+        goal.refresh_from_db()
+        return Response(
+            {**result, "goal": GoalDetailSerializer(goal, context={"request": request}).data}
+        )
+
+
+class PlanMyDayView(APIView):
+    """Pick today's realistic workload from across every goal."""
+
+    def post(self, request):
+        serializer = PlanDayInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        result = replan_service.plan_day(
+            request.user, minutes=serializer.validated_data["minutes"]
+        )
+        return Response(
+            {
+                "summary": result["summary"],
+                "available_minutes": result["available_minutes"],
+                "picks": [
+                    {
+                        "task": TaskListSerializer(pick["task"]).data,
+                        "reason": pick["reason"],
+                        "estimated_minutes": pick["estimated_minutes"],
+                    }
+                    for pick in result["picks"]
+                ],
             }
         )
 

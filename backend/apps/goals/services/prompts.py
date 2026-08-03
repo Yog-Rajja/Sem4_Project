@@ -121,6 +121,93 @@ today 2025-03-01:
 """
 
 
+REPLAN_SYSTEM_PROMPT = """\
+You reschedule a plan that has fallen behind.
+
+Reply with ONLY a JSON object. No prose, no markdown fences.
+
+Schema:
+{
+  "summary": "string - one sentence, max 25 words, explaining what you changed",
+  "milestones": [
+    {
+      "id": 0,
+      "target_date": "YYYY-MM-DD",
+      "tasks": [ { "id": 0, "due_date": "YYYY-MM-DD" } ]
+    }
+  ]
+}
+
+Rules:
+- You are given only the UNFINISHED work. Reschedule all of it. Never invent, \
+rename, drop or merge anything, and never return an id you were not given.
+- Every date must be today or later, and on or before the final deadline.
+- Milestone target_dates must stay in the same order they are given.
+- Every task's due_date must fall on or before its milestone's target_date.
+- Spread the remaining work evenly across the time that is actually left. If \
+there is far too little time, still fit everything in and say so plainly in \
+the summary.
+- The summary talks to the user about their plan. Good: "Compressed the \
+remaining three milestones into nine weeks, with revision moved last." Bad: \
+"I have updated the JSON dates."
+"""
+
+
+def build_replan_user_prompt(goal_title: str, today: str, deadline: str | None,
+                             progress: int, payload: str) -> str:
+    ends = (
+        f"The final deadline is {deadline}."
+        if deadline
+        else "There is no fixed deadline; pick a realistic finish."
+    )
+    return (
+        f"Goal: {goal_title}\n"
+        f"Today's date: {today}\n"
+        f"{ends}\n"
+        f"The user has completed {progress}% of the tasks so far.\n\n"
+        f"Unfinished work to reschedule:\n{payload}\n\n"
+        f"Return the rescheduled JSON."
+    )
+
+
+DAILY_PLAN_SYSTEM_PROMPT = """\
+You choose what a person should actually do today.
+
+Reply with ONLY a JSON object. No prose, no markdown fences.
+
+Schema:
+{
+  "summary": "string - one encouraging sentence, max 25 words",
+  "picks": [
+    {
+      "id": 0,
+      "reason": "string - max 12 words, why this one today",
+      "estimated_minutes": 30
+    }
+  ]
+}
+
+Rules:
+- Choose only from the task ids you are given. Never invent an id.
+- Pick as many as fit the stated available time, and no more. Fewer, finished \
+tasks beat a list nobody completes.
+- Order them the way they should be done: overdue and blocking work first, \
+then whatever is due soonest.
+- estimated_minutes is a realistic single sitting: 15, 30, 45, 60 or 90.
+- Prefer spreading across goals over draining one, unless something is overdue.
+- The summary speaks to the user, not about the data.
+"""
+
+
+def build_daily_plan_user_prompt(today: str, minutes: int, payload: str) -> str:
+    return (
+        f"Today's date: {today}\n"
+        f"The user has about {minutes} minutes of focused time available.\n\n"
+        f"Candidate tasks:\n{payload}\n\n"
+        f"Return the plan JSON."
+    )
+
+
 def build_breakdown_user_prompt(task_title: str, today: str, due_date: str | None,
                                 goal_title: str) -> str:
     due = f"It is due {due_date}." if due_date else "It has no due date; keep steps within two weeks."

@@ -168,6 +168,12 @@ class GenerateRoadmapInputSerializer(serializers.Serializer):
         return value.strip()
 
 
+class PlanDayInputSerializer(serializers.Serializer):
+    """How much focused time the user actually has today."""
+
+    minutes = serializers.IntegerField(min_value=15, max_value=720, default=120)
+
+
 class ReorderSerializer(serializers.Serializer):
     """`[{id, order}, ...]` — used for both milestone and task reordering."""
 
