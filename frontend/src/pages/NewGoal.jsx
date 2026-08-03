@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageShell from '../components/layout/PageShell'
 import RoadmapEditor from '../components/goals/RoadmapEditor'
@@ -26,19 +26,40 @@ const GENERATING_STEPS = [
   'Setting realistic dates…',
 ]
 
+/** Normalise a generated roadmap into the editor's shape. */
+function normalise(milestones) {
+  return (milestones || []).map((m) => ({
+    title: m.title || '',
+    target_date: m.target_date || '',
+    search_query: m.search_query || '',
+    tasks: (m.tasks || []).map((t) => ({
+      title: t.title || '',
+      due_date: t.due_date || '',
+    })),
+  }))
+}
+
 export default function NewGoal() {
   const navigate = useNavigate()
+  const location = useLocation()
   const toast = useToast()
 
-  const [step, setStep] = useState('input') // input | preview
+  const [step, setStep] = useState(
+    () => (location.state?.preview ? 'preview' : 'input'), // input | preview
+  )
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const [text, setText] = useState('')
-  const [targetDate, setTargetDate] = useState('')
-  const [title, setTitle] = useState('')
-  const [milestones, setMilestones] = useState([])
+  // A roadmap generated from an uploaded document arrives through router
+  // state, so it lands in the same editable preview as an AI-generated one.
+  const handoff = location.state?.preview
+
+  const [text, setText] = useState(handoff?.raw_input_text || '')
+  const [targetDate, setTargetDate] = useState(handoff?.target_date || '')
+  const [title, setTitle] = useState(handoff?.title || '')
+  const [milestones, setMilestones] = useState(() => normalise(handoff?.milestones))
+  const [sourceDocument] = useState(handoff?.source_document || '')
 
   async function generate() {
     if (text.trim().length < 5) {
@@ -53,17 +74,7 @@ export default function NewGoal() {
         ...(targetDate ? { target_date: targetDate } : {}),
       })
       setTitle(data.title || text.trim())
-      setMilestones(
-        (data.milestones || []).map((m) => ({
-          title: m.title || '',
-          target_date: m.target_date || '',
-          search_query: m.search_query || '',
-          tasks: (m.tasks || []).map((t) => ({
-            title: t.title || '',
-            due_date: t.due_date || '',
-          })),
-        })),
-      )
+      setMilestones(normalise(data.milestones))
       setStep('preview')
     } catch (err) {
       setError(errorMessage(err, 'We could not generate a roadmap right now.'))
@@ -256,6 +267,9 @@ export default function NewGoal() {
               <p className="mt-3 text-[13px] text-ink-muted">
                 {milestones.length} milestone{milestones.length === 1 ? '' : 's'} ·{' '}
                 {taskCount} task{taskCount === 1 ? '' : 's'}
+                {sourceDocument && (
+                  <> · built from {sourceDocument}</>
+                )}
               </p>
             </Card>
 
