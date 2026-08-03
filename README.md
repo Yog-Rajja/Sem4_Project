@@ -55,10 +55,25 @@ SQL so SQLite and PostgreSQL agree on timezone boundaries.
 ### AI Studio
 
 Describe what you need and the studio works out *what it is* before building
-it. Five document types today — résumé, diet plan, study timetable, cover
-letter, project report — behind **one engine**: each type is a JSON shape,
-prompt guidance and a validator, so adding a sixth is a registry entry rather
-than a new feature.
+it. Seven types today — résumé, diet plan, study timetable, cover letter,
+project report, invitation card and generated image — behind **one engine**:
+each type is a JSON shape, prompt guidance and a validator, so adding another
+is a registry entry rather than a new feature.
+
+**Invitation cards are typeset, not painted.** A wedding card is drawn with CSS
+and inline SVG — ornate borders, a palette inferred from your words ("orange" →
+marigold), optional mehendi/sangeet events — and exported as PNG. That is
+deliberate: image models render lettering unreliably, and a wedding card with a
+misspelt name is worthless. Here the names, dates and venue are real text,
+always correct and crisp when printed. Any emblem or logo is something you add
+afterwards.
+
+**Image generation** is wired to Gemini's image models for genuinely pictorial
+requests. Note that image output is **not included in the Gemini free tier** —
+the models appear in the model list but return a quota error indefinitely, so
+this path needs billing enabled. Until then it fails with an explanation rather
+than silently, and the artifact row is rolled back instead of being left as an
+empty shell.
 
 Intent is classified by weighted keywords first, so "make me a resume" never
 costs an API call; only genuinely ambiguous prompts fall through to the model.
@@ -79,6 +94,46 @@ font is fetched at runtime.
 The account's own name and email are passed in as known facts — otherwise a
 generated CV comes out addressed to "Your Name", because the prompt forbids
 inventing personal details.
+
+### Notifications
+
+Two channels, neither needing a third-party service or a task queue.
+
+**Web push** reaches a phone's lock screen with the site closed, via the
+browser's own push service (FCM on Android, APNs through Safari on iOS). Set it
+up once:
+
+```bash
+.venv\Scripts\python.exe backend/manage.py generate_vapid_keys
+```
+
+Paste the pair into `backend/.env`. VAPID is just a signature proving the push
+came from your server — there is no account to create anywhere.
+
+**Email** uses Django's SMTP backend. Leave `EMAIL_HOST_USER` blank and mail
+prints to the server console instead of sending, so the whole flow is
+developable with no mailbox. For Gmail you need an
+[App Password](https://myaccount.google.com/apppasswords), not your normal one.
+
+Both are **off by default** and switched on per user in **Settings**, which
+also has a *Send a test* button — otherwise there's no way to know it works
+except waiting until tomorrow.
+
+Delivery is one management command, scheduled by the OS:
+
+```bash
+.venv\Scripts\python.exe backend/manage.py notify_daily
+```
+
+Windows Task Scheduler, daily at 08:00:
+
+```bash
+schtasks /create /tn "SmartCompanionDigest" /sc daily /st 08:00 /tr "D:\Sem4_Project\.venv\Scripts\python.exe D:\Sem4_Project\backend\manage.py notify_daily"
+```
+
+Running it hourly is fine — each user is sent to once per day, and only once
+their chosen hour has passed. That guard is what makes a dumb scheduler safe,
+and it's why there's no Celery here: one job, once a day.
 
 ### Document intelligence
 
