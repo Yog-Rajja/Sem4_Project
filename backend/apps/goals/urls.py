@@ -6,6 +6,7 @@ from .views import (
     GoalViewSet,
     MilestoneViewSet,
     PlanMyDayView,
+    PublicRoadmapView,
     TaskViewSet,
 )
 
@@ -17,5 +18,10 @@ router.register("tasks", TaskViewSet, basename="task")
 urlpatterns = [
     path("dashboard/", DashboardView.as_view(), name="dashboard"),
     path("plan-my-day/", PlanMyDayView.as_view(), name="plan-my-day"),
+    path(
+        "public/roadmap/<uuid:token>/",
+        PublicRoadmapView.as_view(),
+        name="public-roadmap",
+    ),
     path("", include(router.urls)),
 ]

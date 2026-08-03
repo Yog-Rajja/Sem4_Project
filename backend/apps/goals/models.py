@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -14,6 +16,11 @@ class Goal(models.Model):
     target_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Sharing is off until asked for, and the token is unguessable rather than
+    # sequential so a shared roadmap can't be found by counting upwards.
+    share_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    is_shared = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]

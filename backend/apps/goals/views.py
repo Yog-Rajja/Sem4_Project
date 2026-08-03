@@ -2,7 +2,8 @@ import datetime as dt
 
 from django.db import transaction
 from django.db.models import F, Prefetch
-from rest_framework import status, viewsets
+from django.http import Http404
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +16,7 @@ from .serializers import (
     GoalSerializer,
     MilestoneSerializer,
     PlanDayInputSerializer,
+    PublicGoalSerializer,
     ReorderSerializer,
     ResourceSerializer,
     TaskListSerializer,
@@ -95,6 +97,48 @@ class GoalViewSet(viewsets.ModelViewSet):
         return Response(
             {**result, "goal": GoalDetailSerializer(goal, context={"request": request}).data}
         )
+
+
+    @action(detail=True, methods=["post"], url_path="share")
+    def share(self, request, pk=None):
+        """Turn public sharing on or off for this roadmap."""
+        goal = self.get_object()
+        goal.is_shared = bool(request.data.get("shared", True))
+        goal.save(update_fields=["is_shared"])
+        return Response(
+            {
+                "is_shared": goal.is_shared,
+                "share_token": str(goal.share_token) if goal.is_shared else None,
+            }
+        )
+
+
+class PublicRoadmapView(APIView):
+    """Read-only roadmap for anyone holding the link.
+
+    Deliberately the only unauthenticated endpoint in the project: it takes an
+    unguessable token, returns no identifiers, and 404s the moment sharing is
+    switched off.
+    """
+
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, token):
+        goal = (
+            Goal.objects.filter(share_token=token, is_shared=True)
+            .select_related("user")
+            .prefetch_related(
+                Prefetch(
+                    "milestones",
+                    queryset=Milestone.objects.prefetch_related("tasks", "resources"),
+                )
+            )
+            .first()
+        )
+        if goal is None:
+            raise Http404("No shared roadmap here.")
+        return Response(PublicGoalSerializer(goal).data)
 
 
 class PlanMyDayView(APIView):

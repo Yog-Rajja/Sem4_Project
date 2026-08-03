@@ -151,7 +151,54 @@ class GoalDetailSerializer(GoalSerializer):
     milestones = MilestoneSerializer(many=True, read_only=True)
 
     class Meta(GoalSerializer.Meta):
-        fields = GoalSerializer.Meta.fields + ["milestones"]
+        fields = GoalSerializer.Meta.fields + [
+            "milestones", "is_shared", "share_token",
+        ]
+
+
+class PublicMilestoneSerializer(serializers.ModelSerializer):
+    """Read-only milestone for the public share page."""
+
+    tasks = serializers.SerializerMethodField()
+    resources = ResourceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Milestone
+        fields = ["title", "target_date", "order", "is_complete", "tasks", "resources"]
+
+    def get_tasks(self, obj):
+        return [
+            {"title": task.title, "due_date": task.due_date, "is_complete": task.is_complete}
+            for task in obj.tasks.all()
+            if task.parent_id is None
+        ]
+
+
+class PublicGoalSerializer(serializers.ModelSerializer):
+    """What an anonymous visitor may see: the plan, and nothing about the
+    person. No ids, no owner, no documents, no raw input text."""
+
+    milestones = PublicMilestoneSerializer(many=True, read_only=True)
+    progress = serializers.IntegerField(read_only=True)
+    owner_name = serializers.SerializerMethodField()
+    total_tasks = serializers.SerializerMethodField()
+    completed_tasks = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Goal
+        fields = [
+            "title", "target_date", "created_at", "progress",
+            "total_tasks", "completed_tasks", "owner_name", "milestones",
+        ]
+
+    def get_owner_name(self, obj):
+        return obj.user.first_name or obj.user.username
+
+    def get_total_tasks(self, obj):
+        return obj.task_counts()[0]
+
+    def get_completed_tasks(self, obj):
+        return obj.task_counts()[1]
 
 
 # --- AI endpoints ---------------------------------------------------------

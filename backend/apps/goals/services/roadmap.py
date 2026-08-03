@@ -186,7 +186,7 @@ def _mock_roadmap(goal_text: str, target_date) -> list[dict]:
 
 # --- Public API -----------------------------------------------------------
 
-def generate_roadmap(goal_text: str, target_date=None) -> list[dict]:
+def generate_roadmap(goal_text: str, target_date=None, context: str | None = None) -> list[dict]:
     if settings.USE_MOCK_AI:
         logger.info("USE_MOCK_AI is on — returning stub roadmap")
         return _mock_roadmap(goal_text, target_date)
@@ -197,6 +197,7 @@ def generate_roadmap(goal_text: str, target_date=None) -> list[dict]:
             goal_text=goal_text,
             today=dt.date.today().isoformat(),
             target_date=target_date.isoformat() if target_date else None,
+            context=context,
         ),
         temperature=0.2,
     )

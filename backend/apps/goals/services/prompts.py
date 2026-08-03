@@ -76,18 +76,29 @@ Example — user goal: "Save 2 lakh rupees for a bike in 10 months", today is \
 """
 
 
-def build_roadmap_user_prompt(goal_text: str, today: str, target_date: str | None) -> str:
+def build_roadmap_user_prompt(
+    goal_text: str, today: str, target_date: str | None, context: str | None = None
+) -> str:
     deadline = (
         f"The user wants this done by {target_date}."
         if target_date
         else "The user gave no deadline; choose a realistic one yourself."
     )
-    return (
-        f"Goal: {goal_text}\n"
-        f"Today's date: {today}\n"
-        f"{deadline}\n\n"
-        f"Generate the roadmap JSON."
-    )
+    parts = [
+        f"Goal: {goal_text}",
+        f"Today's date: {today}",
+        deadline,
+    ]
+    if context:
+        # Used when a roadmap is built from an uploaded syllabus or brief —
+        # the document is the authority on what actually has to be covered.
+        parts.append(
+            "Base the milestones on this material the user supplied. Cover what "
+            "it actually contains rather than what you would normally suggest:\n\n"
+            f"{context[:12000]}"
+        )
+    parts.append("Generate the roadmap JSON.")
+    return "\n\n".join(parts)
 
 
 BREAKDOWN_SYSTEM_PROMPT = """\
