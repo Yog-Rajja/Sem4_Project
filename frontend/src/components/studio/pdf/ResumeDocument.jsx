@@ -97,7 +97,7 @@ function Section({ title, children }) {
 function Bullets({ items }) {
   return items.map((item, index) => (
     <View style={styles.bulletRow} key={index}>
-      <Text style={styles.bulletMark}>—</Text>
+      <Text style={styles.bulletMark}>•</Text>
       <Text style={styles.bulletText}>{item}</Text>
     </View>
   ))
@@ -110,7 +110,7 @@ export default function ResumeDocument({ data }) {
   const links = (data.links || []).map((link) => link.url).join('  ·  ')
 
   return (
-    <Document title={`${data.name} — CV`} author={data.name}>
+    <Document title={`${data.name} CV`} author={data.name}>
       <Page size="A4" style={styles.page}>
         <Text style={styles.name}>{data.name}</Text>
         {data.headline ? <Text style={styles.headline}>{data.headline}</Text> : null}

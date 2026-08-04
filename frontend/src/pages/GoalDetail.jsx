@@ -133,7 +133,13 @@ export default function GoalDetail() {
 
   const toggleMilestone = (milestone) => {
     const is_complete = !milestone.is_complete
-    patchMilestoneLocal(milestone.id, { is_complete })
+
+    // Locally cascade to all tasks
+    patchMilestoneLocal(milestone.id, {
+      is_complete,
+      tasks: milestone.tasks.map((t) => ({ ...t, is_complete }))
+    })
+
     withRollback(
       () => api.patch(`/milestones/${milestone.id}/`, { is_complete }),
       'Could not update that milestone.',
@@ -145,7 +151,7 @@ export default function GoalDetail() {
     if (target < 0 || target >= goal.milestones.length) return
 
     const reordered = [...goal.milestones]
-    ;[reordered[index], reordered[target]] = [reordered[target], reordered[index]]
+      ;[reordered[index], reordered[target]] = [reordered[target], reordered[index]]
     const withOrder = reordered.map((m, i) => ({ ...m, order: i }))
     setGoal((current) => ({ ...current, milestones: withOrder }))
 
@@ -205,7 +211,46 @@ export default function GoalDetail() {
   const taskHandlers = {
     onToggle: (task) => {
       const is_complete = !task.is_complete
+
+      // Update this task
       patchTaskLocal(task.id, { is_complete })
+
+      // Propagate cascades locally for UI responsiveness
+      const milestone = goal.milestones.find((m) => m.id === task.milestone)
+      if (milestone) {
+        let currentTasks = milestone.tasks.map(t => t.id === task.id ? { ...t, is_complete } : t)
+
+        // Downward
+        const subtasks = milestone.tasks.filter((t) => t.parent === task.id)
+        subtasks.forEach((st) => {
+          patchTaskLocal(st.id, { is_complete })
+          currentTasks = currentTasks.map(t => t.id === st.id ? { ...t, is_complete } : t)
+        })
+
+        // Upward (Task)
+        if (task.parent) {
+          const siblings = currentTasks.filter((t) => t.parent === task.parent)
+          const allComplete = siblings.length > 0 && siblings.every((t) => t.is_complete)
+          const anyIncomplete = siblings.some((t) => !t.is_complete)
+
+          if (allComplete) {
+            patchTaskLocal(task.parent, { is_complete: true })
+            currentTasks = currentTasks.map(t => t.id === task.parent ? { ...t, is_complete: true } : t)
+          } else if (anyIncomplete) {
+            patchTaskLocal(task.parent, { is_complete: false })
+            currentTasks = currentTasks.map(t => t.id === task.parent ? { ...t, is_complete: false } : t)
+          }
+        }
+
+        // Upward (Milestone)
+        const allTasksComplete = currentTasks.length > 0 && currentTasks.every((t) => t.is_complete)
+        if (allTasksComplete) {
+          patchMilestoneLocal(milestone.id, { is_complete: true })
+        } else if (!is_complete) {
+          patchMilestoneLocal(milestone.id, { is_complete: false })
+        }
+      }
+
       withRollback(
         () => api.patch(`/tasks/${task.id}/`, { is_complete }),
         'Could not update that task.',

@@ -92,7 +92,7 @@ const DietPlanCard = forwardRef(function DietPlanCard({ data }, ref) {
                           marginBottom: 5,
                         }}
                       >
-                        <span style={{ fontWeight: 600, color: '#4f46e5' }}>
+                        <span style={{ fontWeight: 600, color: '#1d5c99' }}>
                           {meal.slot}
                         </span>
                         {meal.calories ? <span>{meal.calories} kcal</span> : null}
@@ -131,7 +131,7 @@ const DietPlanCard = forwardRef(function DietPlanCard({ data }, ref) {
       ) : null}
 
       <p style={{ marginTop: 20, fontSize: 11, color: '#8b8b94' }}>
-        General guidance only — not medical or dietary advice.
+        General guidance only, not medical or dietary advice.
       </p>
     </div>
   )

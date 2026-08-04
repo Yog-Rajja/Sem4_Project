@@ -69,6 +69,27 @@ class Milestone(models.Model):
     def __str__(self):
         return f"{self.goal_id} · {self.title}"
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        orig_is_complete = None
+        skip_downward_cascade = kwargs.pop('skip_downward_cascade', False)
+        
+        if not is_new:
+            try:
+                orig_is_complete = type(self).objects.get(pk=self.pk).is_complete
+            except type(self).DoesNotExist:
+                pass
+
+        super().save(*args, **kwargs)
+
+        if not is_new and orig_is_complete is not None and self.is_complete != orig_is_complete:
+            if not skip_downward_cascade:
+                # Cascade downwards: When milestone is marked complete, all its tasks are complete
+                for task in self.tasks.all():
+                    if task.is_complete != self.is_complete:
+                        task.is_complete = self.is_complete
+                        task.save(update_fields=['is_complete'], skip_downward_cascade=False)
+
     @property
     def owner_user_id(self):
         return self.goal.user_id
@@ -102,17 +123,64 @@ class Task(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        orig_is_complete = None
+        skip_downward_cascade = kwargs.pop('skip_downward_cascade', False)
+        
+        if not is_new:
+            try:
+                orig_is_complete = type(self).objects.get(pk=self.pk).is_complete
+            except type(self).DoesNotExist:
+                pass
+
         # Kept in save() rather than the serializer so the admin, the shell and
         # bulk flows all stamp the timestamp the same way.
         if self.is_complete and self.completed_at is None:
             self.completed_at = timezone.now()
+            if kwargs.get("update_fields") and "completed_at" not in kwargs["update_fields"]:
+                kwargs["update_fields"] = set(kwargs["update_fields"]) | {"completed_at"}
         elif not self.is_complete and self.completed_at is not None:
             self.completed_at = None
-            if kwargs.get("update_fields"):
+            if kwargs.get("update_fields") and "completed_at" not in kwargs["update_fields"]:
                 kwargs["update_fields"] = set(kwargs["update_fields"]) | {"completed_at"}
-        elif self.is_complete and kwargs.get("update_fields"):
+        elif self.is_complete and kwargs.get("update_fields") and "completed_at" not in kwargs["update_fields"]:
             kwargs["update_fields"] = set(kwargs["update_fields"]) | {"completed_at"}
+            
         super().save(*args, **kwargs)
+
+        if not is_new and orig_is_complete is not None and self.is_complete != orig_is_complete:
+            if not skip_downward_cascade:
+                # Downward cascade
+                for subtask in self.subtasks.all():
+                    if subtask.is_complete != self.is_complete:
+                        subtask.is_complete = self.is_complete
+                        subtask.save(update_fields=['is_complete'], skip_downward_cascade=False)
+            
+            # Upward cascade
+            if self.is_complete:
+                if self.parent_id:
+                    parent = self.parent
+                    if not parent.is_complete and not parent.subtasks.filter(is_complete=False).exists():
+                        parent.is_complete = True
+                        parent.save(update_fields=['is_complete'], skip_downward_cascade=True)
+                
+                if self.milestone_id:
+                    ms = self.milestone
+                    if not ms.is_complete and not ms.tasks.filter(is_complete=False).exists():
+                        ms.is_complete = True
+                        ms.save(update_fields=['is_complete'], skip_downward_cascade=True)
+            else:
+                if self.parent_id:
+                    parent = self.parent
+                    if parent.is_complete:
+                        parent.is_complete = False
+                        parent.save(update_fields=['is_complete'], skip_downward_cascade=True)
+
+                if self.milestone_id:
+                    ms = self.milestone
+                    if ms.is_complete:
+                        ms.is_complete = False
+                        ms.save(update_fields=['is_complete'], skip_downward_cascade=True)
 
     @property
     def owner_user_id(self):

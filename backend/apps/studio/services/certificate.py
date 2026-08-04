@@ -30,6 +30,7 @@ Rules:
 that was not provided.
 - Warm and understated, not corporate. No exclamation marks, no emoji.
 - Maximum 18 words.
+- Never use an em dash.
 
 Example — given "12 tasks, 3 milestones, 21 days":
 { "tagline": "Twelve tasks, three milestones, twenty-one days of showing up." }

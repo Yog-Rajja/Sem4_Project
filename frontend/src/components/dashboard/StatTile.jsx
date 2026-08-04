@@ -20,7 +20,7 @@ export default function StatTile({ label, value, tone = 'neutral', index = 0 }) 
       <p className="text-[12px] font-medium tracking-wide text-ink-muted uppercase">
         {label}
       </p>
-      <p className={cn('mt-1.5 text-2xl font-semibold tabular-nums', TONES[tone])}>
+      <p className={cn('mt-1.5 text-2xl font-monospaced font-semibold tabular-nums', TONES[tone])}>
         {value}
       </p>
     </motion.div>

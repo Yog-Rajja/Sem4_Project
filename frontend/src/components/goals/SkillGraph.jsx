@@ -171,7 +171,7 @@ export default function SkillGraph({ goalId, onSelectMilestone }) {
                 onClick={() => node.milestone_id && onSelectMilestone?.(node.milestone_id)}
               >
                 <title>
-                  {node.label} — {node.milestone_title} ({node.progress}%)
+                  {node.label} · {node.milestone_title} ({node.progress}%)
                 </title>
                 {isHovered && (
                   <circle

@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -22,25 +23,26 @@ export default function Topbar({ onOpenMobileNav, onOpenCommandPalette }) {
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-surface/85 px-4 backdrop-blur-md sm:px-6">
-      <button
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-line bg-canvas/80 px-5 sm:px-8 backdrop-blur-md">
+      <motion.button
         type="button"
         onClick={onOpenMobileNav}
-        aria-label="Open menu"
-        className="-ml-1 rounded-lg p-2 text-ink-soft transition-colors hover:bg-surface-muted lg:hidden"
+        whileHover={{ scale: 1.1, rotate: 10 }}
+        whileTap={{ scale: 0.9 }}
+        className="-ml-1 p-2 text-ink-soft transition-colors hover:bg-surface hover:text-brand-500 rounded-2xl lg:hidden shadow-card"
       >
-        <MenuIcon size={18} />
-      </button>
+        <MenuIcon size={20} />
+      </motion.button>
 
       {/* Doubles as the discoverability hint for the keyboard shortcut. */}
       <button
         type="button"
         onClick={onOpenCommandPalette}
-        className="hidden items-center gap-2 rounded-lg border border-line bg-surface-muted px-2.5 py-1.5 text-[13px] text-ink-muted transition-colors hover:border-line-strong hover:text-ink-soft sm:flex"
+        className="hidden items-center gap-2 rounded-button border border-line bg-surface-muted px-2.5 py-1.5 text-[13px] text-ink-muted transition-colors hover:border-line-strong hover:text-ink-soft sm:flex"
       >
         <SearchIcon size={15} />
         <span>Search or jump to…</span>
-        <kbd className="ml-6 rounded border border-line bg-surface px-1.5 py-0.5 text-[11px]">
+        <kbd className="ml-6 rounded border border-line bg-surface px-1.5 py-0.5 text-[11px] text-ink-soft">
           {isMac ? '⌘' : 'Ctrl'} K
         </kbd>
       </button>
@@ -55,47 +57,46 @@ export default function Topbar({ onOpenMobileNav, onOpenCommandPalette }) {
 
         <AlertsMenu />
 
-        <button
+        <motion.button
           type="button"
           onClick={toggle}
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={isDark ? 'Light mode' : 'Dark mode'}
-          className="rounded-lg p-2 text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9, rotate: -20 }}
+          className="rounded-2xl p-2 text-ink-muted transition-colors hover:bg-surface hover:shadow-card hover:text-highlight"
         >
-          {isDark ? <SunIcon size={17} /> : <MoonIcon size={17} />}
-        </button>
+          {isDark ? <SunIcon size={20} /> : <MoonIcon size={20} />}
+        </motion.button>
 
-        <div className="flex items-center gap-2">
+        <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-2 cursor-pointer bg-surface px-2 py-1 rounded-2xl shadow-card ml-2">
           <span
-            className="grid h-7.5 w-7.5 place-items-center rounded-full bg-brand-100 text-[12.5px] font-semibold text-brand-700"
-            title={user?.username}
+            className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-tr from-brand-400 to-highlight text-[14px] font-bold text-white shadow-pop"
           >
             {initial}
           </span>
-          <span className="hidden max-w-32 truncate text-[13px] font-medium text-ink lg:block">
+          <span className="hidden max-w-32 truncate text-[14px] font-bold text-ink lg:block mr-2 font-sans">
             {user?.first_name || user?.username}
           </span>
-        </div>
+        </motion.div>
 
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.1, rotate: 15 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => navigate('/settings')}
-          aria-label="Settings"
-          title="Settings"
-          className="rounded-lg p-2 text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
+          className="rounded-2xl p-2 text-ink-muted transition-colors hover:bg-surface hover:shadow-card hover:text-sky"
         >
-          <GearIcon size={17} />
-        </button>
+          <GearIcon size={20} />
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.1, rotate: 10 }}
+          whileTap={{ scale: 0.9 }}
           onClick={logout}
-          aria-label="Sign out"
-          title="Sign out"
-          className="rounded-lg p-2 text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
+          className="rounded-2xl p-2 text-ink-muted transition-colors hover:bg-brand-50 hover:shadow-card hover:text-brand-500"
         >
-          <LogoutIcon size={17} />
-        </button>
+          <LogoutIcon size={20} />
+        </motion.button>
       </div>
     </header>
   )

@@ -17,7 +17,7 @@ export function formatDate(value, fallback = 'No date') {
   return date ? format(date, 'd MMM yyyy') : fallback
 }
 
-export function formatShortDate(value, fallback = '—') {
+export function formatShortDate(value, fallback = '-') {
   const date = toDate(value)
   return date ? format(date, 'd MMM') : fallback
 }

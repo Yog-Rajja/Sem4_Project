@@ -56,7 +56,7 @@ const TimetableCard = forwardRef(function TimetableCard({ data }, ref) {
                   key={index}
                   style={{
                     border: '1px solid #e6e6e9',
-                    borderLeft: '3px solid #4f46e5',
+                    borderLeft: '3px solid #1d5c99',
                     borderRadius: 6,
                     padding: '7px 8px',
                     background: '#fafafa',

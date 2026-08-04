@@ -171,7 +171,7 @@ export default function NewGoal() {
                 <Field
                   label="What do you want to achieve?"
                   htmlFor="goal-text"
-                  hint="Plain English is fine — include a rough timeframe if you have one."
+                  hint="Plain English is fine. Include a rough timeframe if you have one."
                 >
                   <Textarea
                     id="goal-text"
@@ -201,7 +201,7 @@ export default function NewGoal() {
                 <Field
                   label="Target date"
                   htmlFor="goal-date"
-                  hint="Optional — we will pick a sensible horizon if you leave this empty."
+                  hint="Optional. We will pick a sensible horizon if you leave this empty."
                   className="max-w-56"
                 >
                   <Input

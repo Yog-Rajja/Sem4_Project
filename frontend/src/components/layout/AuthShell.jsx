@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { CompassIcon } from '../ui/Icons'
 
 const HIGHLIGHTS = [
-  'Describe a goal in plain English — get a dated roadmap back.',
+  'Describe a goal in plain English, get a dated roadmap back.',
   'Every milestone comes with real videos and a search link.',
   'Track tasks, deadlines and progress in one dashboard.',
 ]
@@ -43,7 +43,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
           className="absolute inset-0 opacity-30"
           style={{
             backgroundImage:
-              'radial-gradient(circle at 20% 15%, #a5b4fc 0, transparent 45%), radial-gradient(circle at 80% 75%, #4338ca 0, transparent 50%)',
+              'radial-gradient(circle at 20% 15%, #afcdea 0, transparent 45%), radial-gradient(circle at 80% 75%, #14456f 0, transparent 50%)',
           }}
         />
         <div className="relative flex h-full flex-col justify-center px-14">

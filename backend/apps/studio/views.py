@@ -189,7 +189,7 @@ class GoalCertificateView(APIView):
         if not total or done < total:
             return Response(
                 {
-                    "detail": "This goal isn't finished yet — every task needs "
+                    "detail": "This goal isn't finished yet. Every task needs "
                     "to be complete first.",
                     "code": "goal_not_complete",
                 },
@@ -204,7 +204,7 @@ class GoalCertificateView(APIView):
             goal=goal,
             kind=Artifact.Kind.CERTIFICATE,
             defaults={
-                "title": f"{goal.title} — Certificate of Completion",
+                "title": f"{goal.title} - Certificate of Completion",
                 "prompt": "",
                 "data": data,
             },

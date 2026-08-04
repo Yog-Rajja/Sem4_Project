@@ -50,7 +50,7 @@ export default function ShareDialog({ open, onClose, goal, onChange }) {
       open={open}
       onClose={onClose}
       title="Share this roadmap"
-      description="A read-only page anyone can open — no account needed."
+      description="A read-only page anyone can open, no account needed."
       footer={<Button onClick={onClose}>Done</Button>}
     >
       <div className="space-y-4">

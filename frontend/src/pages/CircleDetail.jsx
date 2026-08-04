@@ -198,7 +198,7 @@ export default function CircleDetail() {
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
         title="Invite to this circle"
-        description="Anyone with this link can join — only aggregate stats are ever shown, never your goal titles or tasks."
+        description="Anyone with this link can join. Only aggregate stats are ever shown, never your goal titles or tasks."
         footer={<Button onClick={() => setInviteOpen(false)}>Done</Button>}
       >
         <div className="space-y-3">
@@ -236,7 +236,7 @@ export default function CircleDetail() {
                 Reset link
               </Button>
               <p className="mt-1.5 text-[12px] text-ink-muted">
-                Generates a new link and disables this one — use it if the old link got
+                Generates a new link and disables this one. Use it if the old link got
                 shared too widely.
               </p>
             </div>

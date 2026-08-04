@@ -27,7 +27,7 @@ const NAV = [
 
 function NavItems({ onNavigate }) {
   return (
-    <nav className="flex flex-col gap-0.5 px-3">
+    <nav className="flex flex-col gap-2 px-4 mt-4">
       {NAV.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
@@ -35,16 +35,21 @@ function NavItems({ onNavigate }) {
           onClick={onNavigate}
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-medium transition-colors duration-150',
+              'group flex items-center gap-3.5 px-3 py-2.5 text-[15px] transition-colors duration-200 rounded-2xl font-sans',
               isActive
-                ? 'bg-brand-50 text-brand-700'
-                : 'text-ink-soft hover:bg-surface-muted hover:text-ink',
+                ? 'bg-surface shadow-card font-bold text-ink'
+                : 'text-ink-soft hover:bg-surface/50 hover:text-ink font-semibold',
             )
           }
         >
           {({ isActive }) => (
             <>
-              <Icon size={17} className={isActive ? 'text-brand-600' : 'text-ink-muted'} />
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: -2 }}
+                className={cn('p-1.5 rounded-xl transition-colors', isActive ? 'bg-brand-100/50 text-brand-600' : 'bg-transparent text-ink-muted group-hover:text-brand-500 group-hover:bg-brand-50/50')}
+              >
+                <Icon size={20} />
+              </motion.div>
               {label}
             </>
           )}
@@ -56,11 +61,15 @@ function NavItems({ onNavigate }) {
 
 function Brand() {
   return (
-    <div className="flex items-center gap-2.5 px-5 py-4">
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">
-        <CompassIcon size={18} />
-      </span>
-      <span className="text-[14.5px] font-semibold tracking-[-0.01em] text-ink">
+    <div className="flex items-center gap-3 px-7 py-7 mb-2">
+      <motion.span
+        whileHover={{ rotate: 180 }}
+        transition={{ type: "spring", stiffness: 200, damping: 10 }}
+        className="flex items-center justify-center bg-highlight w-10 h-10 rounded-2xl text-ink shadow-pop"
+      >
+        <CompassIcon size={22} />
+      </motion.span>
+      <span className="font-heading text-[18px] text-ink font-semibold tracking-tight">
         Smart Companion
       </span>
     </div>
@@ -71,7 +80,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
   return (
     <>
       {/* Desktop rail */}
-      <aside className="hidden w-60 shrink-0 border-r border-line bg-surface lg:flex lg:flex-col">
+      <aside className="hidden w-64 shrink-0 border-r border-line bg-canvas lg:flex lg:flex-col">
         <Brand />
         <NavItems />
       </aside>

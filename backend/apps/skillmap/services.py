@@ -56,6 +56,7 @@ Rules:
   with genuine branches.
 - Never create a cycle (a path that leads back to where it started).
 - 8 to 20 nodes total. Do not pad with trivial or repeated topics.
+- Never use an em dash in a label.
 """
 
 

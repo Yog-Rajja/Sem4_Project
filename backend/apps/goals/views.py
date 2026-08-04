@@ -25,8 +25,70 @@ from .serializers import (
 from .services import replan as replan_service
 from .services import resources as resources_service
 from .services import roadmap as roadmap_service
+from .services.llm import complete_text
+
+import logging
+import random
+
+logger = logging.getLogger(__name__)
 
 UPCOMING_WINDOW_DAYS = 7
+
+FALLBACK_QUOTES = [
+    {"quote": "The secret of getting ahead is getting started.", "author": "Mark Twain"},
+    {"quote": "It does not matter how slowly you go as long as you do not stop.", "author": "Confucius"},
+    {"quote": "Success is the sum of small efforts, repeated day in and day out.", "author": "Robert Collier"},
+    {"quote": "The only way to do great work is to love what you do.", "author": "Steve Jobs"},
+    {"quote": "Believe you can and you're halfway there.", "author": "Theodore Roosevelt"},
+    {"quote": "Don't watch the clock; do what it does. Keep going.", "author": "Sam Levenson"},
+    {"quote": "Start where you are. Use what you have. Do what you can.", "author": "Arthur Ashe"},
+    {"quote": "Every expert was once a beginner.", "author": "Helen Hayes"},
+    {"quote": "Your limitation—it's only your imagination.", "author": "Unknown"},
+    {"quote": "Push yourself, because no one else is going to do it for you.", "author": "Unknown"},
+    {"quote": "Great things never come from comfort zones.", "author": "Unknown"},
+    {"quote": "Dream it. Wish it. Do it.", "author": "Unknown"},
+    {"quote": "Hard work beats talent when talent doesn't work hard.", "author": "Tim Notke"},
+    {"quote": "The future belongs to those who believe in the beauty of their dreams.", "author": "Eleanor Roosevelt"},
+    {"quote": "It always seems impossible until it's done.", "author": "Nelson Mandela"},
+]
+
+
+class MotivationView(APIView):
+    """Returns a motivational quote tailored to the user's goals."""
+
+    def get(self, request):
+        goals = list(
+            Goal.objects.filter(user=request.user)
+            .values_list("title", flat=True)[:5]
+        )
+
+        if not goals:
+            pick = random.choice(FALLBACK_QUOTES)
+            return Response(pick)
+
+        goal_list = ", ".join(goals)
+
+        try:
+            raw = complete_text(
+                system=(
+                    "You are a motivational coach. Return ONLY a JSON object with "
+                    "two keys: \"quote\" (a short, powerful motivational sentence "
+                    "relevant to the user's goals) and \"author\" (attribute it to "
+                    "a famous person or say \"Smart Companion\"). No markdown, no "
+                    "extra text. Keep the quote under 25 words."
+                ),
+                user=f"My current goals are: {goal_list}",
+                temperature=0.9,
+            )
+            import json
+            data = json.loads(raw.strip().strip("`").strip())
+            if "quote" in data:
+                return Response(data)
+        except Exception as exc:
+            logger.warning("Motivation LLM call failed: %s", exc)
+
+        pick = random.choice(FALLBACK_QUOTES)
+        return Response(pick)
 
 
 class GoalViewSet(viewsets.ModelViewSet):

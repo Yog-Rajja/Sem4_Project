@@ -27,7 +27,7 @@ export default function PdfFrame({ artifact, filename }) {
     <div>
       <div className="mb-3 flex items-center justify-between gap-3">
         <p className="text-[12.5px] text-ink-muted">
-          Selectable text, not an image — readable by applicant tracking systems.
+          Selectable text, not an image, so it is readable by applicant tracking systems.
         </p>
         <PDFDownloadLink document={element} fileName={filename}>
           {({ loading }) => (

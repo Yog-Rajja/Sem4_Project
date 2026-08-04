@@ -51,7 +51,7 @@ export default function CertificateBanner({ goal }) {
             Every task in this goal is done.
           </p>
           <p className="mt-0.5 text-[12.5px] text-brand-700/75">
-            Claim a certificate — a downloadable record of what you finished.
+            Claim a certificate, a downloadable record of what you finished.
           </p>
         </div>
         <Button onClick={claim} loading={loading && open}>

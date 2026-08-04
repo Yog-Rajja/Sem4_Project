@@ -9,29 +9,34 @@ import { useTheme } from '../../context/ThemeContext'
  *
  * Dark is a *selected* step, not an inverted one. Both series colours were
  * validated against the surface they actually render on (#ffffff / #16161a)
- * for lightness band, chroma floor and contrast — #8b93f8 was rejected for
- * sitting outside the dark lightness band.
+ * for lightness band, chroma floor and contrast.
  */
 const LIGHT = {
-  series: '#4f46e5',
-  seriesSoft: '#e0e7ff',
+  series: '#1d5c99',
+  seriesSoft: '#d8e7f5',
   grid: '#e6e6e9',
   axis: '#8b8b94',
   ink: '#18181b',
   surface: '#ffffff',
   border: '#e6e6e9',
-  cursor: 'rgba(99,102,241,0.06)',
+  cursor: 'rgba(29,92,153,0.06)',
+  pieColors: ['#61E8B2', '#5AC8FA', '#9B6DFF'],
+  areaStroke: '#FF6B6B',
+  areaFill: 'rgba(255,107,107,0.15)',
 }
 
 const DARK = {
-  series: '#7c83f5',
-  seriesSoft: '#272251',
+  series: '#4a90d9',
+  seriesSoft: '#1c3350',
   grid: '#27272e',
   axis: '#85858f',
   ink: '#f4f4f5',
   surface: '#16161a',
   border: '#27272e',
-  cursor: 'rgba(124,131,245,0.10)',
+  cursor: 'rgba(74,144,217,0.10)',
+  pieColors: ['#61E8B2', '#5AC8FA', '#9B6DFF'],
+  areaStroke: '#FF6B6B',
+  areaFill: 'rgba(255,107,107,0.25)',
 }
 
 export function useChartTheme() {

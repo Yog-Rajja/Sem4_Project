@@ -208,7 +208,7 @@ def generate_subtasks(task_title: str, goal_title: str, due_date=None) -> list[d
     if settings.USE_MOCK_AI:
         base = due_date or (dt.date.today() + dt.timedelta(days=7))
         return [
-            {"title": f"{task_title} — part {i + 1}",
+            {"title": f"{task_title}, part {i + 1}",
              "due_date": base - dt.timedelta(days=(2 - i) * 2),
              "order": i}
             for i in range(3)

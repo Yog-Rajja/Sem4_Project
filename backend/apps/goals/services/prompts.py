@@ -40,6 +40,8 @@ programming tutorial". Bad: "finish week 3 of my plan".
 search_query naming the useful topic, e.g. "how to build an emergency fund".
 - Tasks are actions the person does, phrased in the imperative. Be specific to \
 this goal; never emit filler like "Task 1" or "Continue studying".
+- Never use an em dash anywhere in your reply. Use a comma, a period, or "and" \
+instead.
 
 Example — user goal: "Save 2 lakh rupees for a bike in 10 months", today is \
 2025-01-15:
@@ -119,6 +121,7 @@ Rules:
 - Every due_date must be on or before the parent task's due date, and on or \
 after today.
 - Each subtask is a single sitting of work. Never restate the parent task.
+- Never use an em dash anywhere in your reply.
 
 Example — parent task: "Build a REST API for the project", due 2025-03-10, \
 today 2025-03-01:
@@ -161,6 +164,7 @@ the summary.
 - The summary talks to the user about their plan. Good: "Compressed the \
 remaining three milestones into nine weeks, with revision moved last." Bad: \
 "I have updated the JSON dates."
+- Never use an em dash anywhere in your reply.
 """
 
 
@@ -207,6 +211,7 @@ then whatever is due soonest.
 - estimated_minutes is a realistic single sitting: 15, 30, 45, 60 or 90.
 - Prefer spreading across goals over draining one, unless something is overdue.
 - The summary speaks to the user, not about the data.
+- Never use an em dash anywhere in your reply.
 """
 
 

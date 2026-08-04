@@ -13,11 +13,11 @@ export default function PageShell({ title, subtitle, actions, children, classNam
       {(title || actions) && (
         <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink sm:text-[22px]">
+            <h1 className="font-quirky-heading text-[24px] tracking-tight text-ink sm:text-[32px]">
               {title}
             </h1>
             {subtitle && (
-              <p className="mt-1 text-[13.5px] text-ink-muted">{subtitle}</p>
+              <p className="mt-1.5 text-[14.5px] font-sans text-ink-soft">{subtitle}</p>
             )}
           </div>
           {actions && <div className="flex items-center gap-2">{actions}</div>}

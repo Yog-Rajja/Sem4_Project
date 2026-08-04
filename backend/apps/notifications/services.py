@@ -77,7 +77,7 @@ def build_digest(user) -> dict:
     if lines:
         body = " · ".join(lines[:3])
         if remaining_total:
-            body += f" — {remaining_total} left in total"
+            body += f" ({remaining_total} left in total)"
     else:
         body = "You're clear. Enjoy the breathing room."
 
@@ -192,18 +192,18 @@ def _email_bodies(user, digest: dict) -> tuple[str, str]:
     if digest["overdue"]:
         text.append(f"OVERDUE ({counts['overdue']})")
         text += [
-            f"  [ ] {t['title']}  — {t['goal']} · {t['days']} day(s) late"
+            f"  [ ] {t['title']}  ({t['goal']}, {t['days']} day(s) late)"
             for t in digest["overdue"]
         ]
         text.append("")
     if digest["today"]:
         text.append(f"DUE TODAY ({counts['today']})")
-        text += [f"  [ ] {t['title']}  — {t['goal']}" for t in digest["today"]]
+        text += [f"  [ ] {t['title']}  ({t['goal']})" for t in digest["today"]]
         text.append("")
     if digest["this_week"]:
         text.append(f"COMING THIS WEEK ({counts['this_week']})")
         text += [
-            f"  [ ] {t['title']}  — {t['goal']} · due {t['due']}"
+            f"  [ ] {t['title']}  ({t['goal']}, due {t['due']})"
             for t in digest["this_week"]
         ]
         text.append("")
@@ -258,7 +258,7 @@ def _email_bodies(user, digest: dict) -> tuple[str, str]:
         '<tr>'
         f'<td style="padding:7px 0;font-size:13px;color:#18181b">{g["title"]}</td>'
         f'<td style="padding:7px 0;font-size:13px;color:#8b8b94;text-align:right;white-space:nowrap">'
-        f'<strong style="color:#4f46e5">{g["left"]}</strong> left of {g["total"]}</td>'
+        f'<strong style="color:#1d5c99">{g["left"]}</strong> left of {g["total"]}</td>'
         "</tr>"
         for g in digest["goals"]
     )
@@ -268,7 +268,7 @@ def _email_bodies(user, digest: dict) -> tuple[str, str]:
   <p style="font-size:12.5px;color:#8b8b94;margin:0 0 4px">Smart Companion</p>
   <h1 style="font-size:21px;margin:0 0 6px">{digest['title']}</h1>
   <p style="font-size:13px;color:#52525b;margin:0">
-    Good morning {name} — {counts['remaining']} task{'s' if counts['remaining'] != 1 else ''} left in total
+    Good morning {name}. {counts['remaining']} task{'s' if counts['remaining'] != 1 else ''} left in total
     {f", {counts['done_today']} already done today" if counts['done_today'] else ""}.
   </p>
 
@@ -280,7 +280,7 @@ def _email_bodies(user, digest: dict) -> tuple[str, str]:
 
   <p style="margin:28px 0 0">
     <a href="{app_url}/dashboard"
-       style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:11px 20px;border-radius:8px;font-size:14px;display:inline-block">
+       style="background:#1d5c99;color:#ffffff;text-decoration:none;padding:11px 20px;border-radius:8px;font-size:14px;display:inline-block">
       Open dashboard
     </a>
   </p>
@@ -304,7 +304,7 @@ def send_email(user, digest: dict) -> bool:
 
     text, html = _email_bodies(user, digest)
     message = EmailMultiAlternatives(
-        subject=f"{digest['title']} — Smart Companion",
+        subject=f"{digest['title']} - Smart Companion",
         body=text,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[recipient],

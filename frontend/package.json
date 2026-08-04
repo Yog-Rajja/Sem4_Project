@@ -12,9 +12,12 @@
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
     "axios": "^1.19.0",
+    "canvas-confetti": "^1.9.4",
     "date-fns": "^4.4.0",
     "framer-motion": "^12.43.0",
     "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.84.0",

@@ -137,7 +137,9 @@ def _build_system_prompt(kind: str) -> str:
         f"markdown fences.\n\n{spec['shape']}\n\n"
         f"Rules:\n{spec['guidance']}\n\n"
         f"Fill every field you reasonably can from the request. Leave a field "
-        f"empty rather than inventing a fact about the person."
+        f"empty rather than inventing a fact about the person. Never use an "
+        f"em dash anywhere in your reply; use a comma, a period, or a colon "
+        f"instead."
     )
 
 
@@ -217,7 +219,7 @@ def _mock_data(kind: str, prompt: str) -> dict:
 
     if kind == Artifact.Kind.DIET_PLAN:
         return {
-            "title": f"Meal plan — {subject}",
+            "title": f"Meal plan for {subject}",
             "goal_summary": "A balanced seven-day plan built from everyday foods.",
             "daily_calories": 2000,
             "macros": {"protein_g": 110, "carbs_g": 230, "fat_g": 60},
@@ -238,7 +240,7 @@ def _mock_data(kind: str, prompt: str) -> dict:
 
     if kind == Artifact.Kind.TIMETABLE:
         return {
-            "title": f"Weekly timetable — {subject}",
+            "title": f"Weekly timetable for {subject}",
             "summary": "A realistic week with built-in breaks and one lighter day.",
             "days": [
                 {
@@ -304,7 +306,7 @@ def _mock_data(kind: str, prompt: str) -> dict:
         }
 
     return {
-        "title": f"Project Report — {subject}",
+        "title": f"Project Report on {subject}",
         "subtitle": "A final-year engineering project",
         "author": "Manav Sharma",
         "abstract": f"This report documents the design and implementation of {subject}.",

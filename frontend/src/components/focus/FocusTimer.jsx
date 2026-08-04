@@ -156,7 +156,7 @@ export default function FocusTimer({
 
       {running && (
         <p className={cn('mt-3 text-[12.5px] text-ink-muted')}>
-          {Math.floor(elapsed / 60)} min banked so far — stopping early still counts it.
+          {Math.floor(elapsed / 60)} min banked so far. Stopping early still counts it.
         </p>
       )}
     </div>

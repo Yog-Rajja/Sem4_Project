@@ -4,21 +4,21 @@ import { formatDate } from '../../../lib/format'
 /**
  * Completion certificate, exported as PNG.
  *
- * Deliberately drawn as a formal keepsake — deep indigo border, a wax-seal
- * medallion, serif type — distinct from the warm-palette Invitation card so
+ * Deliberately drawn as a formal keepsake: deep navy border, a wax-seal
+ * medallion, serif type, distinct from the warm-palette Invitation card so
  * the two never get confused at a glance. Every number on it is a fact
  * computed server-side (see apps/studio/services/certificate.py); only the
  * tagline is AI-written, and even that falls back to a canned line if every
  * model is unavailable, so an achievement never fails to render.
  *
- * Colours are inlined rather than themed — the exported PNG must look the
+ * Colours are inlined rather than themed: the exported PNG must look the
  * same regardless of the app's light/dark mode when it was generated.
  */
-const INK = '#1e1b4b'
-const ACCENT = '#4338ca'
+const INK = '#132a40'
+const ACCENT = '#14456f'
 const GOLD = '#b8860b'
 const PAPER = '#fdfcf8'
-const RULE = '#d8d3e8'
+const RULE = '#d5e0e8'
 
 function Seal() {
   return (

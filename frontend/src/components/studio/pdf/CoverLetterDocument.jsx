@@ -35,7 +35,7 @@ export default function CoverLetterDocument({ data }) {
   const contact = [sender.location, sender.phone, sender.email].filter(Boolean)
 
   return (
-    <Document title={`Cover letter — ${data.role}`} author={sender.name}>
+    <Document title={`Cover letter for ${data.role}`} author={sender.name}>
       <Page size="A4" style={styles.page}>
         <View style={styles.senderBlock}>
           <Text style={styles.senderName}>{sender.name}</Text>

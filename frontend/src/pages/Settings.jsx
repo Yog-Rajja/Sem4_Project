@@ -206,7 +206,7 @@ export default function Settings() {
             title="Push to this device"
             description={
               supported
-                ? 'Arrives on your phone or desktop even with the site closed. Uses the browser’s own push service — nothing is shared with a third party.'
+                ? 'Arrives on your phone or desktop even with the site closed. Uses the browser’s own push service, and nothing is shared with a third party.'
                 : 'This browser does not support push notifications. Try Chrome or Edge on Android or desktop.'
             }
             warning={
@@ -234,7 +234,7 @@ export default function Settings() {
             description="The same digest as an email, with every task listed and how many are left."
             warning={
               settings?.email_mode === 'console'
-                ? 'Not actually sending yet — mail is printed to the server console. Add EMAIL_HOST_USER and EMAIL_HOST_PASSWORD to backend/.env and restart the backend. Check it with: manage.py check_email'
+                ? 'Not actually sending yet. Mail is printed to the server console. Add EMAIL_HOST_USER and EMAIL_HOST_PASSWORD to backend/.env and restart the backend. Check it with: manage.py check_email'
                 : ''
             }
           >
@@ -318,7 +318,7 @@ export default function Settings() {
           <Card>
             <CardHeader
               title="What today's message would say"
-              subtitle="Generated from your live tasks — nothing is sent"
+              subtitle="Generated from your live tasks. Nothing is sent"
             />
             <div className="px-5 pb-5">
               <p className="text-[15px] font-semibold text-ink">{preview.title}</p>
@@ -386,7 +386,7 @@ export default function Settings() {
         <p className="px-1 text-[12px] leading-relaxed text-ink-muted">
           Digests are sent by a scheduled task on the server
           (<code className="text-ink-soft">manage.py notify_daily</code>), not from
-          your browser — so they arrive whether or not the app is open.
+          your browser, so they arrive whether or not the app is open.
         </p>
       </motion.div>
     </PageShell>

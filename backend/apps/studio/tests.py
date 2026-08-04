@@ -171,11 +171,11 @@ class SchemaValidationTests(SimpleTestCase):
     def test_titles_are_derived_per_kind(self):
         self.assertEqual(
             schemas.derive_title(Artifact.Kind.RESUME, {"name": "Manav Sharma"}),
-            "Manav Sharma — CV",
+            "Manav Sharma CV",
         )
         self.assertEqual(
             schemas.derive_title(Artifact.Kind.COVER_LETTER, {"role": "Backend Intern"}),
-            "Cover letter — Backend Intern",
+            "Cover letter for Backend Intern",
         )
 
     def test_every_kind_has_a_complete_spec(self):

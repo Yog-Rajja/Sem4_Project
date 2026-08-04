@@ -130,7 +130,7 @@ export default function DocumentVault({ goalId }) {
     <Card className="mt-3">
       <CardHeader
         title="Documents"
-        subtitle="Upload a syllabus, brief or notes — we can read it and plan from it"
+        subtitle="Upload a syllabus, brief or notes, and we can read it and plan from it"
         action={
           <>
             <input

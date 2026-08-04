@@ -88,7 +88,7 @@ export default function Focus() {
         const minutes = Math.round(secondsElapsed / 60)
         toast.success(
           completed
-            ? `Session complete — ${minutes} minutes banked.`
+            ? `Session complete. ${minutes} minutes banked.`
             : `Stopped early. ${minutes} minutes still counted.`,
         )
         setSession(null)
@@ -162,7 +162,7 @@ export default function Focus() {
               <option value="">Nothing specific</option>
               {tasks.map((task) => (
                 <option key={task.id} value={task.id}>
-                  {task.title} — {task.goal_title}
+                  {task.title} · {task.goal_title}
                 </option>
               ))}
             </Select>

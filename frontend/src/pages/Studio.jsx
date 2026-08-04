@@ -18,7 +18,7 @@ import { unwrapList } from '../lib/list'
 import { formatDate } from '../lib/format'
 
 const EXAMPLES = [
-  'A resume for a backend developer internship — Python, Django, React, one internship and two projects',
+  'A resume for a backend developer internship: Python, Django, React, one internship and two projects',
   'A vegetarian diet chart for someone trying to gain muscle on a student budget',
   'A study timetable for GATE prep with college from 9 to 4 on weekdays',
   'A cover letter for a software engineering role at a product company',
@@ -127,7 +127,7 @@ export default function Studio() {
               <Field
                 label="What do you need?"
                 htmlFor="studio-prompt"
-                hint="Include the details that matter — role, constraints, timeframe."
+                hint="Include the details that matter: role, constraints, timeframe."
               >
                 <Textarea
                   id="studio-prompt"
@@ -141,7 +141,7 @@ export default function Studio() {
 
               <div>
                 <p className="mb-1.5 text-[12.5px] text-ink-muted">
-                  Type is detected automatically — override it if you like.
+                  Type is detected automatically. Override it if you like.
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   <button

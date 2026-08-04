@@ -93,10 +93,10 @@ def _explain(result) -> str:
     if not parts:
         return (
             "Nothing was sent. Turn on push in your browser, or set an email "
-            "address below — and add SMTP details to backend/.env so mail can "
+            "address below, and add SMTP details to backend/.env so mail can "
             "actually leave the server."
         )
-    return "Sent — " + " and ".join(parts) + "."
+    return "Sent: " + " and ".join(parts) + "."
 
 
 class DigestPreviewView(APIView):

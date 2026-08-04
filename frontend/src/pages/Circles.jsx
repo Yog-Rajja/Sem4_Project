@@ -98,7 +98,7 @@ export default function Circles() {
     } catch (err) {
       setJoinError(
         err?.response?.status === 404
-          ? 'That invite link is not valid — ask for a fresh one.'
+          ? 'That invite link is not valid. Ask for a fresh one.'
           : errorMessage(err, 'Could not join that circle.'),
       )
     } finally {
@@ -136,7 +136,7 @@ export default function Circles() {
           <EmptyState
             icon={UsersIcon}
             title="No circles yet"
-            message="Start one and invite a friend working toward something similar — a little friendly accountability goes a long way."
+            message="Start one and invite a friend working toward something similar. A little friendly accountability goes a long way."
             action={
               <Button onClick={() => setCreateOpen(true)}>
                 <PlusIcon size={15} />

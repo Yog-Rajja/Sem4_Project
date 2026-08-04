@@ -43,6 +43,7 @@ give a concrete way back. Never use guilt.
 - A quiet week is allowed to be a quiet week. Do not manufacture wins.
 - Speak to the person as "you". No corporate language, no exclamation marks.
 - focus_next must reference their actual goals or overdue work by name.
+- Never use an em dash anywhere in your reply.
 """
 
 

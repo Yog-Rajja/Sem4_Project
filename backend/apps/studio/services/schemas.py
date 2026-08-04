@@ -417,7 +417,7 @@ SCHEMAS = {
         "guidance": RESUME_GUIDANCE,
         "validator": validate_resume,
         "title_field": "name",
-        "title_suffix": " — CV",
+        "title_suffix": " CV",
     },
     Artifact.Kind.DIET_PLAN: {
         "label": "Diet plan",
@@ -439,7 +439,7 @@ SCHEMAS = {
         "guidance": COVER_LETTER_GUIDANCE,
         "validator": validate_cover_letter,
         "title_field": "role",
-        "title_prefix": "Cover letter — ",
+        "title_prefix": "Cover letter for ",
     },
     Artifact.Kind.PROJECT_REPORT: {
         "label": "Project report",

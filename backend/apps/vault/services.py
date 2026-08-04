@@ -60,6 +60,7 @@ deadlines. Not "the document discusses several topics".
 - suggested_actions must relate to this specific document. Good: "Create a \
 revision goal for the five units listed". Bad: "Read the document carefully".
 - If the document is unreadable, say so in the summary and return empty lists.
+- Never use an em dash anywhere in your reply.
 """
 
 

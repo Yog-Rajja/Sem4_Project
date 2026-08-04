@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -82,7 +83,17 @@ WSGI_APPLICATION = "config.wsgi.application"
 # --- Database -------------------------------------------------------------
 # PostgreSQL when DB_ENGINE=postgres and a server is reachable, otherwise SQLite.
 # Both go through the Django ORM natively; no third-party ODM.
-if os.getenv("DB_ENGINE", "sqlite").strip().lower() in {"postgres", "postgresql"}:
+import dj_database_url
+
+if os.getenv("DATABASE_URL"):
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.getenv("DATABASE_URL"),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+elif os.getenv("DB_ENGINE", "sqlite").strip().lower() in {"postgres", "postgresql"}:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -143,14 +154,7 @@ SIMPLE_JWT = {
 }
 
 # --- CORS -----------------------------------------------------------------
-CORS_ALLOWED_ORIGINS = [
-    o.strip()
-    for o in os.getenv(
-        "CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
-    ).split(",")
-    if o.strip()
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # --- AI / external services ----------------------------------------------
 # Provider is swappable: see apps/goals/services/llm.py
